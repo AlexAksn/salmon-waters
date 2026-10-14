@@ -1,5 +1,10 @@
 # Salmon Waters — Lower Mainland (DFO Region 2)
 
+> **Not an official source.** This is a hobby project that re-presents Fisheries and Oceans Canada's published
+> regulations. Rules are transcribed by hand and can be wrong or out of date; boundary points are approximate;
+> river data is provisional. Always confirm with the [DFO page](https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html),
+> current fishery notices and on-site signs before you fish. Live site: https://alexaksn.github.io/salmon-waters/
+
 "Can I fish for salmon here, right now?" — an interactive map of the freshwater salmon openings, closures and
 boundaries published by DFO for Region 2 (Lower Mainland):
 https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html
@@ -69,3 +74,8 @@ else **Not listed**. Species "Any" = open if either chinook or coho can be kept.
   editing `regs.ts`. The stale-rules banner only tells you *that* the page changed, not what.
 - Gauge readings are provisional ECCC data and sit at the station, not necessarily at your spot on the river.
 - Prototype (single-file artifact): https://claude.ai/artifact/YP7QNSB15LRdFjHfj2m5X4
+
+## License
+Code: [MIT](LICENSE). Regulations text © Fisheries and Oceans Canada (reproduced for reference). Base map data:
+BC Freshwater Atlas, Digital Road Atlas, NTS coastline under the [Open Government Licence – British Columbia](https://www2.gov.bc.ca/gov/content/data/policy-standards/open-data/open-government-licence-bc);
+hydrometric data: Environment and Climate Change Canada under the [Open Government Licence – Canada](https://open.canada.ca/en/open-government-licence-canada).
