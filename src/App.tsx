@@ -14,12 +14,13 @@ import MapView from './components/MapView';
 import Panel from './components/Panel';
 
 export type SortMode = 'status' | 'name' | 'near';
-export interface Prefs { sp: SpeciesPick; sort: SortMode; near: string; showUn: boolean; base: Basemap }
+/** Device preferences. Species is deliberately not here: it is a per-trip choice carried only by the URL. */
+export interface Prefs { sort: SortMode; near: string; showUn: boolean; base: Basemap }
 interface DfoStatus { ok: boolean; checkedAt: string; pageModified: string | null; stale: boolean }
 const PREF_KEY = 'sw-prefs';
 function loadPrefs(): Prefs {
-  const d: Prefs = { sp: 'any', sort: 'status', near: 'Vancouver', showUn: false, base: 'chart' };
-  try { return { ...d, ...JSON.parse(localStorage.getItem(PREF_KEY) || '{}') }; } catch { return d; }
+  const d: Prefs = { sort: 'status', near: 'Vancouver', showUn: false, base: 'chart' };
+  try { const { sp: _legacy, ...saved } = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); return { ...d, ...saved }; } catch { return d; }
 }
 const loadJson = <T,>(name: string) => fetch(`${import.meta.env.BASE_URL}data/${name}`).then((r) => r.json() as Promise<T>);
 /** Gauges shown on cards: listed waters only (unlisted rivers carry no flow chip). */
@@ -31,7 +32,7 @@ export default function App() {
   const url = useMemo(readUrl, []);
   const prefs0 = useMemo(loadPrefs, []);
   const [date, setDate] = useState<Date>(url.date ?? new Date());
-  const [sp, setSp] = useState<SpeciesPick>(url.sp ?? prefs0.sp);
+  const [sp, setSp] = useState<SpeciesPick>(url.sp ?? 'any');
   const [sel, setSel] = useState<string | null>(url.sel ?? null);
   const [base, setBase] = useState<Basemap>(url.base ?? prefs0.base);
   const [filter, setFilter] = useState<Status | null>(null);
@@ -53,7 +54,7 @@ export default function App() {
     loadJson<NoticesFile>('notices.json').then(setNoticeFile).catch(() => { /* optional */ });
   }, []);
   useEffect(() => { writeUrl({ date, sp, sel, base }); }, [date, sp, sel, base]);
-  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sp, sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sp, sort, near, showUn, base]);
+  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base]);
   // 24 h of readings for every gauged listed water; refreshed every FLOW_TTL_MS while the tab is visible.
   useEffect(() => {
     let live = true, last = 0;
