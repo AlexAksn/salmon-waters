@@ -28,10 +28,10 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // App shell + the vector chart data are precached, so the Chart basemap and all rules work offline.
-        globPatterns: ['**/*.{js,css,html,svg,png,json}'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // App shell is precached. The data JSON is cached on first use instead (precaching it would download the 2 MB base map twice on a first visit).
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         runtimeCaching: [
+          { urlPattern: /\/data\/[^/]+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'data', expiration: { maxEntries: 10 } } },
           { urlPattern: /^https:\/\/api\.weather\.gc\.ca\//, handler: 'NetworkFirst', options: { cacheName: 'hydrometric', networkTimeoutSeconds: 10, expiration: { maxEntries: 80, maxAgeSeconds: 6 * 3600 } } },
           { urlPattern: /^https:\/\/(tile\.openstreetmap\.org|[abc]\.tile\.opentopomap\.org|server\.arcgisonline\.com|api\.maptiler\.com)\//, handler: 'CacheFirst', options: { cacheName: 'tiles', expiration: { maxEntries: 800, maxAgeSeconds: 14 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
           { urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//, handler: 'StaleWhileRevalidate', options: { cacheName: 'fonts', expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 3600 } } },

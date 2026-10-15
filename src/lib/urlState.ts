@@ -1,9 +1,9 @@
-import { isoLocal, parseIso, sameDay, type SpeciesPick } from './rules';
-import type { Basemap } from './map';
+import { isoLocal, parseIso, sameDay, SPECIES_PICKS, type SpeciesPick } from './rules';
+import { BASEMAPS, type Basemap } from './basemaps';
 
 export interface UrlState { date: Date; sp: SpeciesPick; sel: string | null; base: Basemap }
-const SP: SpeciesPick[] = ['any', 'chinook', 'coho'];
-const BM: Basemap[] = ['chart', 'streets', 'topo', 'satellite'];
+const SP = SPECIES_PICKS.map((s) => s.id);
+const BM = BASEMAPS.map((b) => b.id);
 
 export function readUrl(): Partial<UrlState> {
   const q = new URLSearchParams(location.search);

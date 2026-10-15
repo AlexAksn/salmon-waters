@@ -48,8 +48,9 @@ OpenTopoMap / Esri tile servers are fine for personal use, not for heavy traffic
 ## Layout
 ```
 src/data/regs.ts      rules table transcribed from the DFO page — edit this when DFO changes the page
+src/data/source.json  DFO page url, date and table hash the rules were transcribed from (check-dfo compares against it)
 src/lib/rules.ts      status engine (date windows incl. wrap-around + "until further notice", season runs, upcoming changes)
-src/lib/map.ts        Leaflet controller (vector chart base, tile basemaps, status painting, boundary markers)
+src/lib/map.ts        Leaflet controller (per-pane canvases, merged vector base, tile basemaps, status painting, markers)
 src/lib/geo.ts        geometry types + distance helpers
 src/lib/flow.ts       ECCC hydrometric API client (realtime + HYDAT monthly means), trend + "vs typical" logic
 src/data/gauges.ts    water id -> ECCC station; edit to add/replace gauges
@@ -57,7 +58,8 @@ src/components/       Header, MapView, Panel (list/detail), WaterCard, WaterDeta
 public/data/base.json     vector basemap: land, lakes, river polygons, highways, secondary roads, rail (~1 MB)
 public/data/waters.json   river centreline slice per regulated stretch + boundary markers (~200 KB)
 scripts/fetch_raw.sh      download raw layers from BC Data Catalogue WFS into raw/
-scripts/geo.py            raw/ -> build/base.json (+ stems); computes bridge/rail × river intersections
+scripts/geomlib.py        shared geometry helpers (simplify, clip, stem slicing, projection)
+scripts/geo.py            raw/ -> build/base.json (+ stems); `--boundaries` prints bridge/rail × river crossings
 scripts/waters.py         build/stems -> build/waters.json (segment slices + markers)
 scripts/check-dfo.mjs     prebuild: fetch DFO page -> public/data/dfo-status.json (date + table hash)
 ```

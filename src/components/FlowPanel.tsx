@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Gauge, wateroffice } from '../data/gauges';
-import { ageMinutes, fetchHistory, fetchTypical, fmtQ, fmtReading, hasFlow, latest, metric, trend, vsTypical, type Reading, type Typical } from '../lib/flow';
-import { MON } from '../lib/rules';
+import { ageMinutes, fetchHistory, fetchTypical, fmtMetric, fmtQ, fmtReading, hasFlow, latest, metric, metricRange, trend, TREND_ARROW, vsTypical, type Reading, type Typical } from '../lib/flow';
+import { fmtDate, MON } from '../lib/rules';
 
 const HOURS = 72;
 const W = 360, H = 120, PL = 8, PR = 10, PT = 10, PB = 20;
@@ -25,15 +25,17 @@ export default function FlowPanel({ gauge }: { gauge: Gauge }) {
   const now = rs ? latest(rs) : null;
   const tr = rs ? trend(rs) : null;
   const flow = !!rs && hasFlow(rs);
+  const typQ = flow && typ?.meanQ != null ? typ.meanQ : null;
   const cmp = now && now.q != null && typ ? vsTypical(now.q, typ) : null;
+  const age = now ? ageMinutes(now) : 0;
 
   const chart = useMemo(() => {
     if (!rs || rs.length < 2) return null;
-    const vals = rs.map(metric).filter((v): v is number => v != null);
-    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const range = metricRange(rs); if (!range) return null;
+    let { min: lo, max: hi } = range;
     // Draw the "typical" reference inside the plot only when it is within 2x of the series; otherwise annotate off-axis.
-    const typIn = flow && typ?.meanQ != null && typ.meanQ <= hi * 2 && typ.meanQ >= lo / 2;
-    if (typIn && typ?.meanQ != null) { lo = Math.min(lo, typ.meanQ); hi = Math.max(hi, typ.meanQ); }
+    const typIn = typQ != null && typQ <= hi * 2 && typQ >= lo / 2;
+    if (typIn) { lo = Math.min(lo, typQ); hi = Math.max(hi, typQ); }
     if (hi - lo < 1e-9) { hi = lo + 1; }
     const pad = (hi - lo) * 0.08; lo = Math.max(0, lo - pad); hi += pad;
     const t0 = rs[0].t, t1 = rs[rs.length - 1].t || t0 + 1;
@@ -43,9 +45,9 @@ export default function FlowPanel({ gauge }: { gauge: Gauge }) {
     const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
     const area = `${line} L${pts[pts.length - 1][0].toFixed(1)} ${(H - PB).toFixed(1)} L${pts[0][0].toFixed(1)} ${(H - PB).toFixed(1)} Z`;
     const days: { x: number; label: string }[] = [];
-    for (let d = new Date(t0); d.getTime() <= t1; d.setDate(d.getDate() + 1)) { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); if (m >= t0) days.push({ x: x(m), label: `${MON[new Date(m).getMonth()]} ${new Date(m).getDate()}` }); }
-    return { lo, hi, x, y, pts, line, area, days, t0, t1, typIn };
-  }, [rs, typ, flow]);
+    for (let d = new Date(t0); d.getTime() <= t1; d.setDate(d.getDate() + 1)) { const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); if (m.getTime() >= t0) days.push({ x: x(m.getTime()), label: fmtDate(m) }); }
+    return { lo, hi, x, y, pts, line, area, days, t0, t1, typIn, end: pts[pts.length - 1] };
+  }, [rs, typQ]);
 
   const onMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!chart || !svgRef.current || !rs) return;
@@ -56,8 +58,8 @@ export default function FlowPanel({ gauge }: { gauge: Gauge }) {
     setHover(best);
   };
   const hv = hover != null && rs ? rs[hover] : null;
-  const typLine = chart && chart.typIn && typ?.meanQ != null ? chart.y(typ.meanQ) : null;
-  const typOff = chart && !chart.typIn && flow && typ?.meanQ != null ? (typ.meanQ > chart.hi ? 'above' : 'below') : null;
+  const typLine = chart && chart.typIn && typQ != null ? chart.y(typQ) : null;
+  const typOff = chart && !chart.typIn && typQ != null ? (typQ > chart.hi ? 'above' : 'below') : null;
   const fmtT = (t: number) => new Date(t).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 
   return (
@@ -70,9 +72,9 @@ export default function FlowPanel({ gauge }: { gauge: Gauge }) {
           <div className="flowhead">
             <div className="big">{fmtReading(now)}</div>
             <div className="meta">
-              {tr && <span className={`tr ${tr.dir}`}>{tr.dir === 'rising' ? '▲' : tr.dir === 'falling' ? '▼' : '▶'} {tr.dir}{tr.pct24h != null && ` · ${tr.pct24h > 0 ? '+' : ''}${tr.pct24h.toFixed(0)} % in 24 h`}</span>}
+              {tr && <span className="tr">{TREND_ARROW[tr.dir]} {tr.dir}{tr.pct24h != null && ` · ${tr.pct24h > 0 ? '+' : ''}${tr.pct24h.toFixed(0)} % in 24 h`}</span>}
               {cmp && typ && <span className={`norm ${cmp.cls}`}>{cmp.cls === 'low' ? 'Low' : cmp.cls === 'high' ? 'High' : 'Normal'} for {MON[typ.month - 1]} (typical ~{fmtQ(typ.meanQ!)} m³/s)</span>}
-              <span className="muted">{ageMinutes(now) < 90 ? `${ageMinutes(now)} min ago` : `${Math.round(ageMinutes(now) / 60)} h ago`}{!flow && ' · level only'}</span>
+              <span className="muted">{age < 90 ? `${age} min ago` : `${Math.round(age / 60)} h ago`}{!flow && ' · level only'}</span>
             </div>
           </div>
           {chart && (
@@ -88,9 +90,9 @@ export default function FlowPanel({ gauge }: { gauge: Gauge }) {
                   </g>
                 )}
                 <path className="area" d={chart.area} /><path className="line" d={chart.line} />
-                <text className="ax" x={PL} y={PT - 2}>{flow ? `${fmtQ(chart.hi)} m³/s` : `${chart.hi.toFixed(2)} m`}</text>
-                {typOff && typ?.meanQ != null && <text className="ax" x={W - PR} y={typOff === 'above' ? PT - 2 : H - PB - 3} textAnchor="end">{`typical ${MON[month - 1]} ~${fmtQ(typ.meanQ)} ${typOff === 'above' ? '↑' : '↓'}`}</text>}
-                {(() => { const p = chart.pts[chart.pts.length - 1]; return <circle className="end" cx={p[0]} cy={p[1]} r="4" />; })()}
+                <text className="ax" x={PL} y={PT - 2}>{fmtMetric(chart.hi, flow)}</text>
+                {typOff && typQ != null && <text className="ax" x={W - PR} y={typOff === 'above' ? PT - 2 : H - PB - 3} textAnchor="end">{`typical ${MON[month - 1]} ~${fmtQ(typQ)} ${typOff === 'above' ? '↑' : '↓'}`}</text>}
+                <circle className="end" cx={chart.end[0]} cy={chart.end[1]} r="4" />
                 {hv && metric(hv) != null && (
                   <g><line className="cross" x1={chart.x(hv.t)} x2={chart.x(hv.t)} y1={PT} y2={H - PB} /><circle className="hov" cx={chart.x(hv.t)} cy={chart.y(metric(hv)!)} r="4" /></g>
                 )}

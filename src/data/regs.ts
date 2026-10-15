@@ -1,23 +1,23 @@
 // Source: DFO "Region 2 - Lower Mainland: Recreational salmon fishing limits, openings and closures"
-// https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html  (page date modified 2026-09-16)
+// (url, page date and table hash live in ./source.json; scripts/check-dfo.mjs compares against it at build).
 // Edit this file when DFO updates the page.  kind: keep = retention allowed | nr = non-retention
 // (catch & release) | closed = no fishing for salmon | gear = gear rule.  from/to = "MM-DD" inclusive;
 // to:null = until further notice.
+import source from './source.json';
 
 export type Species = 'chinook' | 'coho' | 'all';
 export type RuleKind = 'keep' | 'nr' | 'closed' | 'gear';
 export interface Rule { sp: Species; kind: RuleKind; from: string; to: string | null; limit?: string; notice?: string }
+/** A water whose salmon rules are not on this page: tidal (Area 29) or simply not listed. */
+export interface Elsewhere { status: 'tidal' | 'none'; short: string; text: string; link?: string }
 export interface Water {
   id: string; name: string; sub?: string; group?: string; area?: string; notes?: string[];
-  rules: Rule[]; kind?: 'tidal'; lake?: string; link?: string;
+  rules: Rule[]; lake?: string; elsewhere?: Elsewhere;
 }
-export interface Unlisted { id: string; name: string; zone: 'a2829' | 'a131516'; note?: string }
 export type City = [name: string, lon: number, lat: number, rank: 1 | 2 | 3];
 
-export const SOURCE_URL = 'https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html';
-export const SOURCE_DATE = '2026-09-16';
-// sha256 (first 16 hex) of the page's table text at transcription time; scripts/check-dfo.mjs recomputes it at build.
-export const SOURCE_TABLE_HASH = '43cf1b37dcef4d5a';
+export const SOURCE_URL: string = source.url;
+export const SOURCE_DATE: string = source.date;
 export const NOTICES: Record<string, string> = {
   FN0960: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366086&ID=all',
   FN0961: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366093&ID=all',
@@ -34,7 +34,19 @@ export const GLOBAL_RULES: string[] = [
   '"Adult chinook" is over 50 cm, except over 62 cm on the Fraser (Sep 1 to Dec 31), Chehalis (Sep 1 to Dec 31), Chilliwack/Vedder incl. Sumas, and Capilano.',
   'No salmon fishing in Region 2 waters flowing into Areas 28 and 29 except the listed opportunities. Waters flowing into Areas 13, 15 and 16: daily limit 0 unless listed.',
 ];
-export const WATERS: Water[] = [
+// Little Campbell River rules apply to both of its stretches; the lower reach adds a closure on top.
+const LCR_RULES: Rule[] = [
+  {sp:'chinook',kind:'keep',from:'08-15',to:'09-15',limit:'1 hatchery marked per day'},
+  {sp:'chinook',kind:'nr',from:'09-16',to:'12-31'},
+  {sp:'coho',kind:'nr',from:'08-15',to:'09-15'},
+  {sp:'coho',kind:'keep',from:'09-16',to:'12-31',limit:'1 hatchery marked per day'},
+];
+/** Why an unlisted river has no salmon opportunity, by the DFO area its water flows into. */
+export const ZONE: Record<'a2829' | 'a131516', Elsewhere> = {
+  a2829: { status:'none', short:'No salmon fishing (flows to Area 28/29)', text:'Flows into Area 28 or 29: there is no salmon fishing except in listed waters. This water is not listed.' },
+  a131516: { status:'none', short:'Daily limit 0 for salmon (flows to Area 13/15/16)', text:'Flows into Area 13, 15 or 16: the daily salmon limit is 0 unless the water is listed. It is not listed.' },
+};
+const LISTED: Water[] = [
   { id:'alouette-upper', name:'Alouette River', sub:'216 St bridge up to Allco Park', group:'Alouette River and tributaries',
     area:'Upstream of the 216th Street bridge to a line between two fishing boundary signs at Allco Park. Tributaries included.',
     rules:[
@@ -114,9 +126,10 @@ export const WATERS: Water[] = [
     rules:[
       {sp:'all',kind:'closed',from:'04-01',to:null,limit:'No fishing for salmon (until further notice)'},
     ]},
-  { id:'fraser-tidal', name:'Fraser River', sub:'tidal waters below the CPR bridge at Mission', kind:'tidal',
-    area:'Below the CPR Bridge at Mission the Fraser is tidal water (Area 29) and is managed under the tidal-waters salmon regulations, not this page.',
-    link:'https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/tidal-maree/a29-eng.html', rules:[] },
+  { id:'fraser-tidal', name:'Fraser River', sub:'tidal waters below the CPR bridge at Mission', rules:[],
+    area:'Below the CPR Bridge at Mission.',
+    elsewhere:{ status:'tidal', short:'Managed under tidal (Area 29) rules', text:'This stretch is tidal water. Salmon rules come from the Area 29 tidal regulations, not this page.',
+      link:'https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/tidal-maree/a29-eng.html' } },
   { id:'harrison-upper', name:'Harrison River', sub:'Harrison Lake outlet to Hwy 7 bridge',
     area:'From the outlet of Harrison Lake downstream to the Highway 7 bridge.',
     rules:[
@@ -140,22 +153,10 @@ export const WATERS: Water[] = [
       {sp:'coho',kind:'keep',from:'04-01',to:'03-31',limit:'4 per day'},
     ]},
   { id:'lcr', name:'Little Campbell River', sub:'below 12 Ave, incl. tributaries',
-    area:'Downstream of 12th Avenue, including tributaries to that part.',
-    rules:[
-      {sp:'chinook',kind:'keep',from:'08-15',to:'09-15',limit:'1 hatchery marked per day'},
-      {sp:'chinook',kind:'nr',from:'09-16',to:'12-31'},
-      {sp:'coho',kind:'nr',from:'08-15',to:'09-15'},
-      {sp:'coho',kind:'keep',from:'09-16',to:'12-31',limit:'1 hatchery marked per day'},
-    ]},
+    area:'Downstream of 12th Avenue, including tributaries to that part.', rules:LCR_RULES },
   { id:'lcr-mouth', name:'Little Campbell River', sub:'lower reach to the Stayte Rd footbridge',
     area:'Downstream of a line between two fishing boundary signs on either side of the river, to the pedestrian bridge at the foot of Stayte Road. Otherwise the "below 12 Ave" rules apply.',
-    rules:[
-      {sp:'all',kind:'closed',from:'08-15',to:'09-30',limit:'No fishing for salmon'},
-      {sp:'chinook',kind:'keep',from:'08-15',to:'09-15',limit:'1 hatchery marked per day'},
-      {sp:'chinook',kind:'nr',from:'09-16',to:'12-31'},
-      {sp:'coho',kind:'nr',from:'08-15',to:'09-15'},
-      {sp:'coho',kind:'keep',from:'09-16',to:'12-31',limit:'1 hatchery marked per day'},
-    ]},
+    rules:[ {sp:'all',kind:'closed',from:'08-15',to:'09-30',limit:'No fishing for salmon'}, ...LCR_RULES ] },
   { id:'lois', name:'Lois Lake', sub:'Powell River area', lake:'Lois Lake',
     area:'Lois Lake.',
     rules:[
@@ -206,7 +207,7 @@ export const WATERS: Water[] = [
     ]},
 ];
 // Rivers with no listed salmon opportunity (shown thin grey so the answer "no" is visible on the map)
-export const UNLISTED: Unlisted[] = [
+export const UNLISTED: { id: string; name: string; zone: keyof typeof ZONE; note?: string }[] = [
   {id:'u-pitt',name:'Pitt River',zone:'a2829'},{id:'u-lillooet',name:'Lillooet River',zone:'a2829'},{id:'u-seymour',name:'Seymour River',zone:'a2829'},
   {id:'u-indian',name:'Indian River',zone:'a2829'},{id:'u-lynn',name:'Lynn Creek',zone:'a2829'},{id:'u-coquihalla',name:'Coquihalla River',zone:'a2829'},
   {id:'u-silverhope',name:'Silverhope Creek',zone:'a2829'},{id:'u-salmon',name:'Salmon River (Langley)',zone:'a2829'},{id:'u-brunette',name:'Brunette River',zone:'a2829'},
@@ -218,6 +219,12 @@ export const UNLISTED: Unlisted[] = [
   {id:'u-sumas-above',name:'Sumas River above Barrowtown',zone:'a2829'},{id:'u-norrish-above',name:'Norrish Creek (upper)',zone:'a2829'},
   {id:'u-stave-above',name:'Stave River above Ruskin Dam',zone:'a2829'},{id:'u-slesse',name:'Slesse Creek',zone:'a2829'},
 ];
+/** Every water on the map: listed stretches first, then unlisted rivers (rules: [], elsewhere: ZONE[...]). */
+export const WATERS: Water[] = [
+  ...LISTED,
+  ...UNLISTED.map((u): Water => ({ id: u.id, name: u.name, rules: [], elsewhere: ZONE[u.zone], notes: u.note ? [u.note] : undefined })),
+];
+
 export const CITIES: City[] = [
   ['Vancouver',-123.1139,49.2611,1],['Surrey',-122.8501,49.1916,1],['Abbotsford',-122.3292,49.0522,1],['Chilliwack',-121.9508,49.1578,1],
   ['Squamish',-123.1558,49.6981,1],['Powell River',-124.5244,49.8356,1],['Sechelt',-123.7633,49.4717,1],['Hope',-121.4414,49.38,1],

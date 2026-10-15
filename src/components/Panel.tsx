@@ -1,10 +1,10 @@
 import { forwardRef } from 'react';
 import type { SortMode } from '../App';
-import { CITIES, GLOBAL_RULES, SOURCE_DATE, SOURCE_URL, UNLISTED, WATERS } from '../data/regs';
-import type { WatersGeo } from '../lib/geo';
+import { CITIES, GLOBAL_RULES, SOURCE_DATE, SOURCE_URL, WATERS } from '../data/regs';
 import { GAUGES } from '../data/gauges';
 import type { Reading } from '../lib/flow';
-import { STATUS_ORDER, type SpeciesPick, type Status } from '../lib/rules';
+import type { WatersGeo } from '../lib/geo';
+import { isUnlisted, STATUS_ORDER, WATER_BY_ID, type SpeciesPick, type Status } from '../lib/rules';
 import ChangingSoon from './ChangingSoon';
 import WaterCard from './WaterCard';
 import WaterDetail from './WaterDetail';
@@ -16,19 +16,23 @@ interface Props {
   onSelect: (id: string) => void; onBack: () => void; onZoom: (id: string) => void; onLocate: () => void;
 }
 const SUMMARY: [Status, string][] = [['open', 'open'], ['cr', 'catch & release'], ['closed', 'closed']];
+const LISTED = WATERS.filter((w) => !isUnlisted(w)), UNLISTED = WATERS.filter(isUnlisted);
 const byName = (a: { name: string; sub?: string }, b: { name: string; sub?: string }) => a.name.localeCompare(b.name) || (a.sub || '').localeCompare(b.sub || '');
 
 const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
   const counts: Record<string, number> = { open: 0, cr: 0, closed: 0 };
-  WATERS.forEach((w) => { const s = p.status[w.id]; if (s in counts) counts[s]++; });
+  LISTED.forEach((w) => { const s = p.status[w.id]; if (s in counts) counts[s]++; });
   const q = p.q.trim().toLowerCase();
-  let ws = WATERS.filter((w) => !q || `${w.name} ${w.sub || ''} ${w.group || ''}`.toLowerCase().includes(q));
+  const matches = (w: { name: string; sub?: string; group?: string }) => !q || `${w.name} ${w.sub || ''} ${w.group || ''}`.toLowerCase().includes(q);
+  let ws = LISTED.filter(matches);
   if (p.filter) ws = ws.filter((w) => p.status[w.id] === p.filter);
   if (p.sort === 'near') ws.sort((a, b) => ((p.dist[a.id] ?? 1e9) - (p.dist[b.id] ?? 1e9)) || byName(a, b));
   else if (p.sort === 'status') ws.sort((a, b) => STATUS_ORDER[p.status[a.id]] - STATUS_ORDER[p.status[b.id]] || byName(a, b));
   else ws.sort(byName);
-  const un = UNLISTED.filter((u) => !q || u.name.toLowerCase().includes(q));
-  const selW = p.sel ? [...WATERS, ...UNLISTED].find((w) => w.id === p.sel) : null;
+  const selW = p.sel ? WATER_BY_ID.get(p.sel) : undefined;
+  const card = (w: (typeof WATERS)[number]) => (
+    <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={GAUGES[w.id] ? p.flows[GAUGES[w.id].stn] : undefined} onSelect={() => p.onSelect(w.id)} />
+  );
 
   return (
     <aside className="panel" ref={ref}>
@@ -61,21 +65,10 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
             <ChangingSoon date={p.date} onSelect={p.onSelect} />
             <ul className="list">
               {ws.length === 0 && <li className="muted" style={{ padding: '8px 2px' }}>Nothing matches.</li>}
-              {ws.map((w) => (
-                <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={GAUGES[w.id] ? p.flows[GAUGES[w.id].stn] : undefined} onSelect={() => p.onSelect(w.id)} />
-              ))}
+              {ws.map(card)}
             </ul>
             <label className="toggle-un"><input type="checkbox" checked={p.showUn} onChange={(e) => p.onShowUn(e.target.checked)} /> Show rivers with no salmon opportunity</label>
-            {p.showUn && (
-              <ul className="list">
-                {un.map((u) => (
-                  <li key={u.id} className="card none" tabIndex={0} role="button" onClick={() => p.onSelect(u.id)} onKeyDown={(e) => { if (e.key === 'Enter') p.onSelect(u.id); }}>
-                    <div className="h"><div className="nm">{u.name}</div><span className="pill none">Not listed</span></div>
-                    <div className="rule muted">{u.zone === 'a131516' ? 'Daily limit 0 for salmon (flows to Area 13/15/16)' : 'No salmon fishing (flows to Area 28/29)'}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {p.showUn && <ul className="list">{UNLISTED.filter(matches).map(card)}</ul>}
             <details className="global">
               <summary>Rules that apply everywhere in Region 2</summary>
               <ul>{GLOBAL_RULES.map((r) => <li key={r}>{r}</li>)}</ul>

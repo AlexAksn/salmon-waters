@@ -1,6 +1,7 @@
-import { dayOfYear, MON, seasonRuns, STATUS_LABEL, type AnyWater } from '../lib/rules';
+import type { Water } from '../data/regs';
+import { dayOfYear, MON, seasonRuns, STATUS_LABEL } from '../lib/rules';
 
-export default function SeasonStrip({ w, date }: { w: AnyWater; date: Date }) {
+export default function SeasonStrip({ w, date }: { w: Water; date: Date }) {
   const year = date.getFullYear();
   const doy = dayOfYear(date);
   const row = (sp: 'chinook' | 'coho') => (

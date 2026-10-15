@@ -1,7 +1,6 @@
-import { isoLocal, parseIso, type SpeciesPick } from '../lib/rules';
+import { isoLocal, parseIso, SPECIES_PICKS, type SpeciesPick } from '../lib/rules';
 
 interface Props { date: Date; sp: SpeciesPick; onDate: (d: Date) => void; onShift: (n: number) => void; onToday: () => void; onSp: (s: SpeciesPick) => void }
-const SPECIES: [SpeciesPick, string][] = [['any', 'Any salmon'], ['chinook', 'Chinook'], ['coho', 'Coho']];
 
 export default function Header({ date, sp, onDate, onShift, onToday, onSp }: Props) {
   return (
@@ -15,9 +14,7 @@ export default function Header({ date, sp, onDate, onShift, onToday, onSp }: Pro
       </div>
       <div className="chips" role="group" aria-label="Species">
         <span className="lab">I want</span>
-        {SPECIES.map(([id, label]) => (
-          <button key={id} className="chip" aria-pressed={sp === id} onClick={() => onSp(id)}>{label}</button>
-        ))}
+        {SPECIES_PICKS.map((s) => <button key={s.id} className="chip" aria-pressed={sp === s.id} onClick={() => onSp(s.id)}>{s.label}</button>)}
       </div>
     </header>
   );
