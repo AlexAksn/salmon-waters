@@ -18,6 +18,9 @@ https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html
   "low / normal / high for this month" context from the long-term HYDAT monthly means.
 - **Stale-rules warning**: the build records the DFO page's date + a hash of its table; the app shows a banner if DFO
   changed the page after the rules were transcribed.
+- **Fishery notices**: every build pulls the last ~6 weeks of DFO Pacific notices and keeps the recreational-salmon ones
+  for Region 2 / our rivers. They show as a strip, a badge on the affected water, in its detail view, and in the banner
+  when newer than two weeks — notices usually land before the regulations page is edited.
 - **Installable PWA**: app shell, rules and the Chart basemap are precached; gauge data and tiles are cached on use.
 
 ## Stack
@@ -31,8 +34,8 @@ npm run build      # -> dist/
 ```
 
 ## Deploy (free: GitHub Pages + Actions)
-`.github/workflows/deploy.yml` builds and deploys on every push to `main`, and every 6 h on a schedule so the
-DFO freshness check (`prebuild`) stays current. Nothing runs server-side.
+`.github/workflows/deploy.yml` builds and deploys on every push to `main`, and every 3 h on a schedule so the
+DFO freshness check and notice pull (`prebuild`) stay current. Nothing runs server-side.
 
 ```sh
 gh repo create salmon-waters --public --source . --push      # or private; Pages is free either way
@@ -62,6 +65,7 @@ scripts/geomlib.py        shared geometry helpers (simplify, clip, stem slicing,
 scripts/geo.py            raw/ -> build/base.json (+ stems); `--boundaries` prints bridge/rail × river crossings
 scripts/waters.py         build/stems -> build/waters.json (segment slices + markers)
 scripts/check-dfo.mjs     prebuild: fetch DFO page -> public/data/dfo-status.json (date + table hash)
+scripts/fetch-notices.mjs prebuild: DFO notice search pages -> public/data/notices.json (regex-matched to water ids)
 ```
 Regenerate geometry: `scripts/fetch_raw.sh && npm run data:geo`.
 
@@ -72,8 +76,8 @@ else **Not listed**. Species "Any" = open if either chinook or coho can be kept.
 ## Caveats
 - Not an official source. Boundary markers flagged *approximate* were placed from the written description, not surveyed.
 - Fraser below the Mission CPR bridge is tidal (Area 29) and intentionally not modelled.
-- Fishery notices (FN0960 / FN0961 / FN1008) are linked, not parsed (DFO offers no feed); in-season changes require
-  editing `regs.ts`. The stale-rules banner only tells you *that* the page changed, not what.
+- Fishery notices are surfaced and linked, not parsed into rules: the app cannot tell that "refrain from fishing"
+  means closed. In-season changes still require editing `regs.ts`; the banner tells you *that* something changed.
 - Gauge readings are provisional ECCC data and sit at the station, not necessarily at your spot on the river.
 - Prototype (single-file artifact): https://claude.ai/artifact/YP7QNSB15LRdFjHfj2m5X4
 

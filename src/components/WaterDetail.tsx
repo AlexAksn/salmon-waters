@@ -3,9 +3,10 @@ import { GAUGES } from '../data/gauges';
 import type { WatersGeo } from '../lib/geo';
 import { active, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type Status } from '../lib/rules';
 import FlowPanel from './FlowPanel';
+import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
 
-interface Props { w: Water; date: Date; status: Status; wg: WatersGeo; onBack: () => void; onZoom: () => void }
+interface Props { w: Water; date: Date; status: Status; wg: WatersGeo; notices: Notice[]; onBack: () => void; onZoom: () => void }
 
 function nearMarks(w: Water, wg: WatersGeo) {
   const segs = wg.geo[w.id]; if (!segs?.length) return [];
@@ -16,7 +17,7 @@ function nearMarks(w: Water, wg: WatersGeo) {
 }
 const Notice = ({ id }: { id?: string }) => (id ? <> <a href={NOTICES[id]} target="_blank" rel="noopener">{id}</a></> : null);
 
-export default function WaterDetail({ w, date, status, wg, onBack, onZoom }: Props) {
+export default function WaterDetail({ w, date, status, wg, notices, onBack, onZoom }: Props) {
   const day = w.elsewhere ? null : daySummary(w, date);
   const marks = nearMarks(w, wg);
   return (
@@ -44,6 +45,13 @@ export default function WaterDetail({ w, date, status, wg, onBack, onZoom }: Pro
           </>
         )}
       </div>
+      {notices.length > 0 && (
+        <div className="notices">
+          <div className="sect-t">Fishery notices · last {NOTICE_DAYS} days</div>
+          <ul className="marks">{notices.map((n) => <li key={n.fn}><span className="d">{fmtNoticeDate(n.date)}</span> <a href={n.url} target="_blank" rel="noopener">{n.fn}</a> {n.subject}{n.waters.length === 0 && <span className="muted"> (region-wide)</span>}</li>)}</ul>
+          <div className="muted small">Notices can change the rules below before the DFO page is updated. Read them before you go.</div>
+        </div>
+      )}
       {day && <SeasonStrip w={w} date={date} />}
       {GAUGES[w.id] && <FlowPanel gauge={GAUGES[w.id]} />}
       {w.area && <dl className="kv"><dt>Where</dt><dd>{w.area}</dd>{w.group && <><dt>Group</dt><dd>{w.group}</dd></>}</dl>}

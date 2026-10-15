@@ -8,6 +8,7 @@ import { km, waterMid } from './lib/geo';
 import type { SalmonMap } from './lib/map';
 import { addDays, isUnlisted, statusOf, type SpeciesPick, type Status } from './lib/rules';
 import { readUrl, writeUrl } from './lib/urlState';
+import { fmtNoticeDate, isUnlistedId, recentNotices, type Notice, type NoticesFile } from './lib/notices';
 import Header from './components/Header';
 import MapView from './components/MapView';
 import Panel from './components/Panel';
@@ -41,6 +42,7 @@ export default function App() {
   const [userLoc, setUserLoc] = useState<LatLon | null>(null);
   const [flows, setFlows] = useState<Record<string, Reading[]>>({});
   const [dfo, setDfo] = useState<DfoStatus | null>(null);
+  const [noticeFile, setNoticeFile] = useState<NoticesFile | null>(null);
   const mapRef = useRef<SalmonMap | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
 
@@ -48,6 +50,7 @@ export default function App() {
     Promise.all([loadJson<BaseData>('base.json'), loadJson<WatersGeo>('waters.json')])
       .then(([base, wg]) => setData({ base, wg })).catch((e) => setErr(String(e)));
     loadJson<DfoStatus>('dfo-status.json').then(setDfo).catch(() => { /* optional */ });
+    loadJson<NoticesFile>('notices.json').then(setNoticeFile).catch(() => { /* optional */ });
   }, []);
   useEffect(() => { writeUrl({ date, sp, sel, base }); }, [date, sp, sel, base]);
   useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sp, sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sp, sort, near, showUn, base]);
@@ -78,6 +81,10 @@ export default function App() {
     return m;
   }, [data, origin]);
 
+  const notices: Notice[] = useMemo(() => recentNotices(noticeFile?.ok ? noticeFile.notices : []), [noticeFile]);
+  // Newest notice from the last two weeks that touches a listed water or the whole region: the "page not updated yet" case.
+  const fresh = useMemo(() => recentNotices(notices, 14).find((n) => n.region || n.waters.some((id) => !isUnlistedId(id))) ?? null, [notices]);
+
   const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); };
   const selectFromMap = (id: string) => { setSel(id); if (window.innerWidth <= 900) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   const locate = () => {
@@ -97,12 +104,15 @@ export default function App() {
   return (
     <div className="app">
       <Header date={date} sp={sp} onDate={setDate} onShift={(n) => setDate((d) => addDays(d, n))} onToday={() => setDate(new Date())} onSp={setSp} />
-      {dfo?.ok && dfo.stale && (
-        <div className="banner" role="status"><b>Heads up:</b> DFO changed the Region 2 page{dfo.pageModified ? ` on ${dfo.pageModified}` : ''}; these rules were transcribed from the {SOURCE_DATE} version. <a href={SOURCE_URL} target="_blank" rel="noopener">Check the DFO page</a> before you go.</div>
+      {((dfo?.ok && dfo.stale) || fresh) && (
+        <div className="banner" role="status">
+          {dfo?.ok && dfo.stale && <span><b>Heads up:</b> DFO changed the Region 2 page{dfo.pageModified ? ` on ${dfo.pageModified}` : ''}; these rules were transcribed from the {SOURCE_DATE} version. <a href={SOURCE_URL} target="_blank" rel="noopener">Check the DFO page</a> before you go.</span>}
+          {fresh && <span><b>New notice {fmtNoticeDate(fresh.date)}:</b> <a href={fresh.url} target="_blank" rel="noopener">{fresh.fn}</a> {fresh.subject}</span>}
+        </div>
       )}
       <div className="main">
         <MapView data={data} status={status} filter={filter} sel={sel} base={base} date={date} mapRef={mapRef} onSelect={selectFromMap} onBase={setBase} onLocate={locate} />
-        <Panel ref={panelRef} date={date} sp={sp} status={status} sel={sel} filter={filter} q={q} sort={sort} near={near} showUn={showUn} dist={dist} hasUserLoc={!!userLoc} wg={data.wg} flows={flows} dfoCheckedAt={dfo?.ok ? dfo.checkedAt : null}
+        <Panel ref={panelRef} date={date} sp={sp} status={status} sel={sel} filter={filter} q={q} sort={sort} near={near} showUn={showUn} dist={dist} hasUserLoc={!!userLoc} wg={data.wg} flows={flows} dfoCheckedAt={dfo?.ok ? dfo.checkedAt : null} notices={notices} noticesFetchedAt={noticeFile?.ok ? noticeFile.fetchedAt : null}
           onFilter={setFilter} onQ={setQ} onSort={setSort} onNear={setNear} onShowUn={setShowUn} onSelect={selectFromList} onBack={() => setSel(null)} onZoom={(id) => mapRef.current?.zoomTo(id)} onLocate={locate} />
       </div>
     </div>

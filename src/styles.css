@@ -25,7 +25,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);
 *{box-sizing:border-box}
 /* status -> colour tokens, set once; every status-coloured element reads --sc (strong) / --ss (soft) */
 .open{--sc:var(--open);--ss:var(--open-soft)} .cr{--sc:var(--cr);--ss:var(--cr-soft)} .closed{--sc:var(--closed);--ss:var(--closed-soft)}
-.none,.card{--sc:var(--none);--ss:var(--none-soft)} .tidal,.gear{--sc:var(--tidal);--ss:var(--tidal-soft)}
+.none,.card{--sc:var(--none);--ss:var(--none-soft)} .tidal,.gear{--sc:var(--tidal);--ss:var(--tidal-soft)} .notice{--sc:var(--cr);--ss:var(--cr-soft)}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 a{color:var(--accent)}
@@ -76,6 +76,10 @@ a{color:var(--accent)}
 .soon li b{font-weight:600;cursor:pointer}
 .soon li b:hover{color:var(--accent)}
 .ev{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;margin-right:4px;white-space:nowrap}
+button.ev{border:0;cursor:pointer;font:inherit;font-size:12px;white-space:normal;text-align:left;padding:1px 6px}
+button.ev:hover{text-decoration:underline}
+.notices .d{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.notices .marks{list-style:none;padding:0;gap:4px}
 /* list */
 .list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .card{border:1px solid var(--line);border-left:4px solid var(--sc);border-radius:8px;background:var(--panel);padding:10px 12px;cursor:pointer;display:grid;gap:6px}
@@ -190,5 +194,5 @@ details.global ul{margin:0;padding:0 12px 10px 28px;font-size:13px;display:grid;
 details.tbl summary{font-size:12px;color:var(--muted);cursor:pointer}
 .small{font-size:11px;line-height:1.4}
 /* DFO freshness banner */
-.banner{background:var(--cr-soft);color:var(--fg);border-bottom:1px solid var(--line);padding:6px 16px;font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner{background:var(--cr-soft);color:var(--fg);border-bottom:1px solid var(--line);padding:6px 16px;font-size:13px;display:grid;gap:4px}
 .banner b{color:var(--cr)}

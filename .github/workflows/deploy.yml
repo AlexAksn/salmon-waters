@@ -1,12 +1,12 @@
 # Builds and deploys to GitHub Pages on every push to main, and on a schedule so the
-# DFO page freshness check (scripts/check-dfo.mjs, run by `prebuild`) stays current.
-# ~1 min per run x 4/day is well inside the free Actions quota. No servers involved.
+# DFO page freshness check and fishery-notice pull (scripts/check-dfo.mjs, scripts/fetch-notices.mjs, run by
+# `prebuild`) stay current. ~1 min per run x 8/day is well inside the free Actions quota. No servers involved.
 name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '17 */6 * * *' # every 6 hours (UTC)
+    - cron: '17 */3 * * *' # every 3 hours (UTC)
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
         uses: actions/configure-pages@v5
       - run: npm ci
       - run: npm test
-      - run: npm run build # prebuild = DFO freshness check -> public/data/dfo-status.json
+      - run: npm run build # prebuild = DFO freshness check + notices -> public/data/{dfo-status,notices}.json
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
       - uses: actions/upload-pages-artifact@v3

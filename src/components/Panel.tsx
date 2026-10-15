@@ -6,12 +6,14 @@ import type { Reading } from '../lib/flow';
 import type { WatersGeo } from '../lib/geo';
 import { isUnlisted, STATUS_ORDER, WATER_BY_ID, type SpeciesPick, type Status } from '../lib/rules';
 import ChangingSoon from './ChangingSoon';
+import Notices from './Notices';
+import { noticesFor, regionNotices, type Notice } from '../lib/notices';
 import WaterCard from './WaterCard';
 import WaterDetail from './WaterDetail';
 
 interface Props {
   date: Date; sp: SpeciesPick; status: Record<string, Status>; sel: string | null; filter: Status | null; q: string; sort: SortMode; near: string; showUn: boolean;
-  dist: Record<string, number>; hasUserLoc: boolean; wg: WatersGeo; flows: Record<string, Reading[]>; dfoCheckedAt: string | null;
+  dist: Record<string, number>; hasUserLoc: boolean; wg: WatersGeo; flows: Record<string, Reading[]>; dfoCheckedAt: string | null; notices: Notice[]; noticesFetchedAt: string | null;
   onFilter: (f: Status | null) => void; onQ: (q: string) => void; onSort: (s: SortMode) => void; onNear: (n: string) => void; onShowUn: (b: boolean) => void;
   onSelect: (id: string) => void; onBack: () => void; onZoom: (id: string) => void; onLocate: () => void;
 }
@@ -31,7 +33,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
   else ws.sort(byName);
   const selW = p.sel ? WATER_BY_ID.get(p.sel) : undefined;
   const card = (w: (typeof WATERS)[number]) => (
-    <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={GAUGES[w.id] ? p.flows[GAUGES[w.id].stn] : undefined} onSelect={() => p.onSelect(w.id)} />
+    <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={GAUGES[w.id] ? p.flows[GAUGES[w.id].stn] : undefined} noticeDate={noticesFor(p.notices, w.id)[0]?.date} onSelect={() => p.onSelect(w.id)} />
   );
 
   return (
@@ -45,7 +47,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
       </div>
       <div className="scroll">
         {selW ? (
-          <WaterDetail w={selW} date={p.date} status={p.status[selW.id]} wg={p.wg} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
+          <WaterDetail w={selW} date={p.date} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
         ) : (
           <>
             <div className={`tools${p.sort === 'near' ? ' near' : ''}`}>
@@ -62,6 +64,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
                 </select>
               )}
             </div>
+            <Notices notices={p.notices} fetchedAt={p.noticesFetchedAt} onSelect={p.onSelect} />
             <ChangingSoon date={p.date} onSelect={p.onSelect} />
             <ul className="list">
               {ws.length === 0 && <li className="muted" style={{ padding: '8px 2px' }}>Nothing matches.</li>}

@@ -1,0 +1,31 @@
+{
+  "fetchedAt": "2026-10-15T04:18:38.060Z",
+  "ok": true,
+  "error": null,
+  "notices": [
+    {
+      "fn": "FN1114",
+      "docId": "370551",
+      "subject": "Region 2 - Capilano River - Notification of Weir Opening and Request to Refrain from Fishing on October 14 and 15, 2026",
+      "date": "2026-10-13",
+      "sent": "2026-10-13 08:39",
+      "url": "https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=370551&ID=all",
+      "region": true,
+      "waters": [
+        "capilano"
+      ]
+    },
+    {
+      "fn": "FN1008",
+      "docId": "367431",
+      "subject": "Chinook Salmon - Coquitlam River (BC Lower Mainland) - Region 2 - Change to retention limits for unmarked Chinook - Effective 00:01 Hours September 19, 2026 to December 31, 2026",
+      "date": "2026-09-16",
+      "sent": "2026-09-16 08:46",
+      "url": "https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=367431&ID=all",
+      "region": true,
+      "waters": [
+        "coquitlam"
+      ]
+    }
+  ]
+}

@@ -10,8 +10,9 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "data:geo": "python3 scripts/geo.py raw build && python3 scripts/waters.py && cp build/base.json build/waters.json public/data/",
-    "prebuild": "node scripts/check-dfo.mjs",
-    "check:dfo": "node scripts/check-dfo.mjs"
+    "prebuild": "node scripts/check-dfo.mjs && node scripts/fetch-notices.mjs",
+    "check:dfo": "node scripts/check-dfo.mjs",
+    "check:notices": "node scripts/fetch-notices.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
