@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { CITIES, SOURCE_DATE, SOURCE_URL, WATERS } from './data/regs';
 import { GAUGES } from './data/gauges';
 import type { Basemap } from './lib/basemaps';
@@ -85,9 +85,17 @@ export default function App() {
   // Newest notice from the last two weeks that touches a listed water or the whole region: the "page not updated yet" case.
   const fresh = useMemo(() => recentNotices(notices, 14).find((n) => n.region || n.waters.some((id) => !isUnlistedId(id))) ?? null, [notices]);
 
-  const showPanel = () => { if (window.innerWidth <= 900) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-  const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); showPanel(); };
-  const selectFromMap = (id: string) => { setSel(id); showPanel(); };
+  const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); };
+  const selectFromMap = (id: string) => { setSel(id); };
+  // Phones: after the panel re-renders (list <-> detail), put its top right under the pinned map. Done after layout and
+  // with an explicit position: scrollIntoView before the swap ends up clamped mid-page once the content shrinks (iOS Safari).
+  useLayoutEffect(() => {
+    if (!data || window.innerWidth > 900) return;
+    const panel = panelRef.current, map = document.querySelector('.mapwrap');
+    if (!panel || !map) return;
+    const top = panel.getBoundingClientRect().top + window.scrollY - map.getBoundingClientRect().height;
+    window.scrollTo({ top: Math.max(0, Math.round(top)), behavior: 'auto' });
+  }, [sel, data]);
   const locate = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(

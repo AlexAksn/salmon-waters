@@ -169,7 +169,7 @@ details.global ul{margin:0;padding:0 12px 10px 28px;font-size:13px;display:grid;
   .app{display:block;height:auto;min-height:100%}
   .main{display:block;height:auto}
   .mapwrap{position:sticky;top:0;height:42vh;min-height:240px;z-index:2}
-  .panel{display:block;border-left:0;border-top:1px solid var(--line);scroll-margin-top:42vh}
+  .panel{display:block;border-left:0;border-top:1px solid var(--line);min-height:100vh} /* tall enough that its top can always sit under the map */
   .scroll{overflow:visible;flex:none;height:auto;padding-block:10px 16px}
   .legend{display:none}
   .legend-m{display:flex;flex-wrap:wrap;gap:4px 12px;padding:6px 16px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
