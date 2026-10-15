@@ -85,8 +85,9 @@ export default function App() {
   // Newest notice from the last two weeks that touches a listed water or the whole region: the "page not updated yet" case.
   const fresh = useMemo(() => recentNotices(notices, 14).find((n) => n.region || n.waters.some((id) => !isUnlistedId(id))) ?? null, [notices]);
 
-  const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); };
-  const selectFromMap = (id: string) => { setSel(id); if (window.innerWidth <= 900) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const showPanel = () => { if (window.innerWidth <= 900) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); showPanel(); };
+  const selectFromMap = (id: string) => { setSel(id); showPanel(); };
   const locate = () => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(

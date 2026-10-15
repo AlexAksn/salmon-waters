@@ -161,12 +161,27 @@ details.global ul{margin:0;padding:0 12px 10px 28px;font-size:13px;display:grid;
 .zb0 .citylbl.r2,.zb0 .citylbl.r3,.zb1 .citylbl.r3{display:none}
 .citylbl.r1{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.08em} .citylbl.r2{font-size:12px} .citylbl.r3{font-size:11px;color:var(--muted)}
 .leaflet-marker-icon.citylbl-wrap{background:none;border:0}
+/* Phones: the page scrolls normally; the map sticks to the top (42vh) and the list/detail scrolls beneath it. */
+.legend-m{display:none}
+.foot .more{display:none}
 @media (max-width:900px){
-  .main{grid-template-columns:1fr;grid-template-rows:52vh 1fr}
-  .panel{border-left:0;border-top:1px solid var(--line)}
+  html,body,#root{height:auto;min-height:100%}
+  .app{display:block;height:auto;min-height:100%}
+  .main{display:block;height:auto}
+  .mapwrap{position:sticky;top:0;height:42vh;min-height:240px;z-index:2}
+  .panel{display:block;border-left:0;border-top:1px solid var(--line);scroll-margin-top:42vh}
+  .scroll{overflow:visible;flex:none;height:auto;padding-block:10px 16px}
   .legend{display:none}
-  .top{gap:8px 12px}
+  .legend-m{display:flex;flex-wrap:wrap;gap:4px 12px;padding:6px 16px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}
+  .legend-m span{display:inline-flex;align-items:center;gap:5px}
+  .legend-m i{display:inline-block;width:14px;height:4px;border-radius:2px;background:var(--sc)}
+  .hint{top:52px}
+  .top{gap:6px 10px;padding-block:6px}
   .brand h1{font-size:19px}
+  .banner{font-size:12px;padding:5px 16px}
+  .chip,.tbtn{padding:8px 14px} .ibtn{width:38px;height:38px} .bm button{padding:9px 11px;font-size:13px} .locate{width:38px;height:38px;top:92px}
+  .datebar input[type=date],.tools input[type=search],.tools select{font-size:16px} /* 16px stops iOS zooming into the field */
+  .foot .long{display:none} .foot.open .long{display:inline} .foot .more{display:inline;border:0;background:none;color:var(--accent);padding:0;font:inherit;font-size:11px}
 }
 @media (prefers-reduced-motion:no-preference){ .card,.chip,.tbtn{transition:border-color .12s,background .12s} }
 /* river conditions */

@@ -10,6 +10,8 @@ interface Opts { onSelect: (id: string) => void; tooltip: (id: string) => string
 const ll = (c: Coord): L.LatLngExpression => toLatLon(c);
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const MAPTILER = import.meta.env.VITE_MAPTILER_KEY as string | undefined;
+/** Hover tooltips only where a pointer can hover; on touch they would stick open after a tap. */
+const HOVER = window.matchMedia('(hover: hover)').matches;
 const COLOR_KEYS = ['land', 'landedge', 'lake', 'river', 'road', 'roadedge', 'rail', 'open', 'cr', 'closed', 'none', 'tidal', 'fg', 'panel'] as const;
 type Colors = Record<(typeof COLOR_KEYS)[number], string>;
 /** Panes bottom to top. Each has its own canvas, so repainting status lines never redraws the base map. */
@@ -87,7 +89,7 @@ export class SalmonMap {
       const thin = isUnlisted(w);
       const wl: WaterLayers = { lines: [], hit: [], thin, isLake: !!w.lake };
       const hitOpts = { renderer: R.hit, opacity: 0, weight: thin ? 14 : 18 };
-      const bindHit = (h: L.Path) => h.on('click', () => opts.onSelect(w.id)).bindTooltip(() => opts.tooltip(w.id), { sticky: true }).addTo(this.g.hit);
+      const bindHit = (h: L.Path) => { h.on('click', () => opts.onSelect(w.id)); if (HOVER) h.bindTooltip(() => opts.tooltip(w.id), { sticky: true }); return h.addTo(this.g.hit); };
       if (w.lake) {
         for (const p of data.lakes.filter((p) => p.n === w.lake)) {
           const latlngs = p.r.map((r) => r.map(ll));

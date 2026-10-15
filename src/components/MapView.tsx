@@ -23,6 +23,7 @@ export default function MapView({ data, status, filter, sel, base, date, mapRef,
       tooltip: (id) => { const w = WATER_BY_ID.get(id)!; return `${w.name}${w.sub ? ` · ${w.sub}` : ''}<br><span style="opacity:.8">${STATUS_LABEL[live.current.status[id]]}</span>`; },
     });
     mapRef.current = m;
+    if (import.meta.env.DEV) (window as unknown as { __salmonMap?: SalmonMap }).__salmonMap = m; // for UI tests only
     if (initialSel.current) m.zoomTo(initialSel.current, false); // deep link: jump, don't animate
     const ro = new ResizeObserver(() => m.invalidate());
     ro.observe(el.current);

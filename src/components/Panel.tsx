@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import type { SortMode } from '../App';
 import { CITIES, GLOBAL_RULES, SOURCE_DATE, SOURCE_URL, WATERS } from '../data/regs';
 import { GAUGES } from '../data/gauges';
@@ -21,7 +21,12 @@ const SUMMARY: [Status, string][] = [['open', 'open'], ['cr', 'catch & release']
 const LISTED = WATERS.filter((w) => !isUnlisted(w)), UNLISTED = WATERS.filter(isUnlisted);
 const byName = (a: { name: string; sub?: string }, b: { name: string; sub?: string }) => a.name.localeCompare(b.name) || (a.sub || '').localeCompare(b.sub || '');
 
+const LEGEND: [Status, string][] = [['open', 'Open'], ['cr', 'Catch & release'], ['closed', 'Closed'], ['none', 'Not listed'], ['tidal', 'Tidal']];
+
 const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [footOpen, setFootOpen] = useState(false);
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [p.sel]); // a newly opened detail starts at its top
   const counts: Record<string, number> = { open: 0, cr: 0, closed: 0 };
   LISTED.forEach((w) => { const s = p.status[w.id]; if (s in counts) counts[s]++; });
   const q = p.q.trim().toLowerCase();
@@ -45,7 +50,8 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
           </button>
         ))}
       </div>
-      <div className="scroll">
+      <div className="legend-m" aria-hidden="true">{LEGEND.map(([k, l]) => <span key={k} className={k}><i />{l}</span>)}</div>
+      <div className="scroll" ref={scrollRef}>
         {selW ? (
           <WaterDetail w={selW} date={p.date} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
         ) : (
@@ -79,9 +85,11 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
           </>
         )}
       </div>
-      <div className="foot">
-        Rules from the DFO Region 2 freshwater salmon page (modified {SOURCE_DATE}). River lines, lakes, roads: BC Freshwater Atlas and Digital Road Atlas (Open Government Licence – BC).
-        Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional). Always confirm with the <a href={SOURCE_URL} target="_blank" rel="noopener">DFO page</a>, fishery notices and on-site signs before you fish. Not an official source.{p.dfoCheckedAt && <> DFO page last checked {p.dfoCheckedAt.slice(0, 10)}.</>}
+      <div className={`foot${footOpen ? ' open' : ''}`}>
+        Not an official source: confirm with the <a href={SOURCE_URL} target="_blank" rel="noopener">DFO page</a>, fishery notices and on-site signs before you fish.{' '}
+        <span className="long">Rules from the DFO Region 2 freshwater salmon page (modified {SOURCE_DATE}). River lines, lakes, roads: BC Freshwater Atlas and Digital Road Atlas (Open Government Licence – BC).
+        Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional).{p.dfoCheckedAt && <> DFO page last checked {p.dfoCheckedAt.slice(0, 10)}.</>}</span>
+        <button className="more" onClick={() => setFootOpen((o) => !o)} aria-expanded={footOpen}>{footOpen ? 'Less' : 'Sources & disclaimer'}</button>
       </div>
     </aside>
   );
