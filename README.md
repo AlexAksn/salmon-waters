@@ -50,7 +50,8 @@ OpenTopoMap / Esri tile servers are fine for personal use, not for heavy traffic
 
 ## Layout
 ```
-src/data/regs.ts      rules table transcribed from the DFO page — edit this when DFO changes the page
+src/data/regs.ts      rules table transcribed from the DFO page — edit this when DFO changes the page; species registry
+                      (chinook, coho, chum, pink, sockeye) — a rule naming a new species adds its chip/strip row automatically
 src/data/source.json  DFO page url, date and table hash the rules were transcribed from (check-dfo compares against it)
 src/lib/rules.ts      status engine (date windows incl. wrap-around + "until further notice", season runs, upcoming changes)
 src/lib/map.ts        Leaflet controller (per-pane canvases, merged vector base, tile basemaps, status painting, markers)
@@ -71,7 +72,8 @@ Regenerate geometry: `scripts/fetch_raw.sh && npm run data:geo`.
 
 ## Status logic
 closed rule active → **Closed**; else a retention rule for the species → **Open**; else a non-retention rule → **Catch & release**;
-else **Not listed**. Species "Any" = open if either chinook or coho can be kept.
+else **Not listed**. Species "Any" = open if any species can be kept. Species are data: the "I want" chips show every
+species that has at least one rule, and each water's season strip shows the species with rules on that water.
 
 ## Caveats
 - Not an official source. Boundary markers flagged *approximate* were placed from the written description, not surveyed.

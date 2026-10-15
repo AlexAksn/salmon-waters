@@ -1,14 +1,20 @@
-import { WATERS, type Rule, type Species, type Water } from '../data/regs';
+import { SPECIES, WATERS, type Fish, type Rule, type Species, type Water } from '../data/regs';
 
+export type { Fish };
 export type Status = 'open' | 'cr' | 'closed' | 'none' | 'tidal';
-export type SpeciesPick = 'any' | 'chinook' | 'coho';
-export type Fish = 'chinook' | 'coho';
-export const FISH: Fish[] = ['chinook', 'coho'];
-export const SPECIES_PICKS: { id: SpeciesPick; label: string }[] = [
-  { id: 'any', label: 'Any salmon' }, { id: 'chinook', label: 'Chinook' }, { id: 'coho', label: 'Coho' },
-];
+export type SpeciesPick = 'any' | Fish;
+export const FISH: Fish[] = SPECIES.map((s) => s.id);
+export const SPN: Record<Species, string> = { all: 'All species', ...Object.fromEntries(SPECIES.map((s) => [s.id, s.label])) } as Record<Species, string>;
+export const SPECIES_ABBR: Record<Fish, string> = Object.fromEntries(SPECIES.map((s) => [s.id, s.abbr])) as Record<Fish, string>;
+/** "I want" chips: Any plus every species that has at least one rule in the dataset. */
+export function speciesPicksFor(waters: Water[]): { id: SpeciesPick; label: string }[] {
+  const used = new Set(waters.flatMap((w) => w.rules.map((r) => r.sp)));
+  return [{ id: 'any', label: 'Any salmon' }, ...SPECIES.filter((s) => used.has(s.id)).map((s) => ({ id: s.id, label: s.label }))];
+}
+export const SPECIES_PICKS = speciesPicksFor(WATERS);
+/** Species with their own rules on this water (drives season-strip rows and the detail list). */
+export const waterFish = (w: Water): Fish[] => FISH.filter((f) => w.rules.some((r) => r.sp === f));
 export const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export const SPN: Record<Species, string> = { chinook: 'Chinook', coho: 'Coho', all: 'All species' };
 export const STATUS_LABEL: Record<Status, string> = {
   open: 'Open', cr: 'Catch & release', closed: 'Closed', none: 'Not listed', tidal: 'Tidal water',
 };
@@ -42,7 +48,7 @@ export interface FishDay { keep: Rule[]; nr: Rule[] }
 export interface DaySummary { closed?: Rule; fish: Record<Fish, FishDay>; gear: Rule[] }
 export function daySummary(w: Water, d: Date): DaySummary {
   const act = activeRules(w, d);
-  const fish = { chinook: { keep: [], nr: [] }, coho: { keep: [], nr: [] } } as Record<Fish, FishDay>;
+  const fish = Object.fromEntries(FISH.map((f): [Fish, FishDay] => [f, { keep: [], nr: [] }])) as Record<Fish, FishDay>;
   for (const r of act) {
     if (r.sp === 'all') continue;
     if (r.kind === 'keep') fish[r.sp].keep.push(r); else if (r.kind === 'nr') fish[r.sp].nr.push(r);
@@ -114,11 +120,11 @@ export function seasonRuns(w: Water, sp: SpeciesPick, year: number): Run[] {
 // ---- what changes in the next N days ----
 export type Change = { kind: 'sp'; sp: Fish; from: Status; to: Status; limit?: string } | { kind: 'gear'; from: string; to: string };
 export interface UpcomingEvent { d: Date; w: Water; ch: Change[] }
-interface Sig { chinook: Status; coho: Status; gear: string }
+interface Sig { st: Record<Fish, Status>; gear: string }
 function sig(w: Water, d: Date): Sig {
   const s = daySummary(w, d);
-  const st = (f: Fish): Status => (s.closed ? 'closed' : fishStatus(s.fish[f]));
-  return { chinook: st('chinook'), coho: st('coho'), gear: s.gear.map((r) => r.limit).sort().join(', ') };
+  const st = Object.fromEntries(FISH.map((f) => [f, s.closed ? 'closed' : fishStatus(s.fish[f])])) as Record<Fish, Status>;
+  return { st, gear: s.gear.map((r) => r.limit).sort().join(', ') };
 }
 export function upcoming(from: Date, days: number, waters: Water[]): UpcomingEvent[] {
   const ev: UpcomingEvent[] = [];
@@ -130,9 +136,9 @@ export function upcoming(from: Date, days: number, waters: Water[]): UpcomingEve
       const cur = sig(w, d);
       const ch: Change[] = [];
       for (const f of FISH) {
-        if (cur[f] === prev[f]) continue;
+        if (cur.st[f] === prev.st[f]) continue;
         const fd = daySummary(w, d).fish[f];
-        ch.push({ kind: 'sp', sp: f, from: prev[f], to: cur[f], limit: (fd.keep[0] ?? fd.nr[0])?.limit });
+        ch.push({ kind: 'sp', sp: f, from: prev.st[f], to: cur.st[f], limit: (fd.keep[0] ?? fd.nr[0])?.limit });
       }
       if (cur.gear !== prev.gear) ch.push({ kind: 'gear', from: prev.gear, to: cur.gear });
       if (ch.length) ev.push({ d, w, ch });

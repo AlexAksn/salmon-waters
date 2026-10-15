@@ -1,7 +1,7 @@
 import { NOTICES, SOURCE_URL, type Water } from '../data/regs';
 import { GAUGES } from '../data/gauges';
 import type { WatersGeo } from '../lib/geo';
-import { active, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type Status } from '../lib/rules';
+import { active, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, waterFish, type Status } from '../lib/rules';
 import FlowPanel from './FlowPanel';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
@@ -35,10 +35,11 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
           <>
             {day.closed && <div>{day.closed.limit || 'No fishing for salmon'}</div>}
             <ul>
-              {!day.closed && FISH.map((f) => {
+              {!day.closed && waterFish(w).map((f) => {
                 const { keep, nr } = day.fish[f];
                 return <li key={f}><b>{SPN[f]}:</b> {keep.length ? keep.map((r, i) => <span key={i}>{i > 0 && '; '}{r.limit}<Notice id={r.notice} /></span>) : nr.length ? 'catch & release only (non-retention)' : 'no opportunity today'}</li>;
               })}
+              {!day.closed && waterFish(w).length < FISH.length && <li className="muted">Other salmon: no opportunity listed</li>}
               {day.gear.map((r, i) => <li key={`g${i}`}><b>Gear:</b> {r.limit}</li>)}
               <li>Daylight hours only · 4 salmon/day all species combined</li>
             </ul>

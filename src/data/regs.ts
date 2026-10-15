@@ -5,7 +5,16 @@
 // to:null = until further notice.
 import source from './source.json';
 
-export type Species = 'chinook' | 'coho' | 'all';
+/** Salmon species the rules can name. Add here and everything (chips, strips, status, changing-soon) follows. */
+export const SPECIES = [
+  { id: 'chinook', label: 'Chinook', abbr: 'CH' },
+  { id: 'coho', label: 'Coho', abbr: 'CO' },
+  { id: 'chum', label: 'Chum', abbr: 'CM' },
+  { id: 'pink', label: 'Pink', abbr: 'PK' },
+  { id: 'sockeye', label: 'Sockeye', abbr: 'SK' },
+] as const;
+export type Fish = (typeof SPECIES)[number]['id'];
+export type Species = Fish | 'all';
 export type RuleKind = 'keep' | 'nr' | 'closed' | 'gear';
 export interface Rule { sp: Species; kind: RuleKind; from: string; to: string | null; limit?: string; notice?: string }
 /** A water whose salmon rules are not on this page: tidal (Area 29) or simply not listed. */
