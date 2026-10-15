@@ -90,6 +90,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
         <span className="long">Rules from the DFO Region 2 freshwater salmon page (modified {SOURCE_DATE}). River lines, lakes, roads: BC Freshwater Atlas and Digital Road Atlas (Open Government Licence – BC).
         Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional).{p.dfoCheckedAt && <> DFO page last checked {p.dfoCheckedAt.slice(0, 10)}.</>}</span>
         <button className="more" onClick={() => setFootOpen((o) => !o)} aria-expanded={footOpen}>{footOpen ? 'Less' : 'Sources & disclaimer'}</button>
+        {' · '}<a href="https://github.com/AlexAksn/salmon-waters/issues" target="_blank" rel="noopener">Report a problem</a>
       </div>
     </aside>
   );
