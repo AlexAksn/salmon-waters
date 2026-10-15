@@ -22,7 +22,9 @@ function loadPrefs(): Prefs {
   const d: Prefs = { sort: 'status', near: 'Vancouver', showUn: false, base: 'chart' };
   try { const { sp: _legacy, ...saved } = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); return { ...d, ...saved }; } catch { return d; }
 }
-const loadJson = <T,>(name: string) => fetch(`${import.meta.env.BASE_URL}data/${name}`).then((r) => r.json() as Promise<T>);
+const loadJson = <T,>(name: string, init?: RequestInit) => fetch(`${import.meta.env.BASE_URL}data/${name}`, init).then((r) => r.json() as Promise<T>);
+// Status files: revalidate past the host's 10-minute HTTP cache (a conditional request, 304 when unchanged).
+const LIVE: RequestInit = { cache: 'no-cache' };
 /** Gauges shown on cards: listed waters only (unlisted rivers carry no flow chip). */
 const CARD_STATIONS = [...new Set(WATERS.filter((w) => !isUnlisted(w)).map((w) => GAUGES[w.id]?.stn).filter((s): s is string => !!s))];
 
@@ -50,8 +52,8 @@ export default function App() {
   useEffect(() => {
     Promise.all([loadJson<BaseData>('base.json'), loadJson<WatersGeo>('waters.json')])
       .then(([base, wg]) => setData({ base, wg })).catch((e) => setErr(String(e)));
-    loadJson<DfoStatus>('dfo-status.json').then(setDfo).catch(() => { /* optional */ });
-    loadJson<NoticesFile>('notices.json').then(setNoticeFile).catch(() => { /* optional */ });
+    loadJson<DfoStatus>('dfo-status.json', LIVE).then(setDfo).catch(() => { /* optional */ });
+    loadJson<NoticesFile>('notices.json', LIVE).then(setNoticeFile).catch(() => { /* optional */ });
   }, []);
   useEffect(() => { writeUrl({ date, sp, sel, base }); }, [date, sp, sel, base]);
   useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base]);

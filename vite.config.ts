@@ -31,6 +31,8 @@ export default defineConfig({
         // App shell is precached. The data JSON is cached on first use instead (precaching it would download the 2 MB base map twice on a first visit).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         runtimeCaching: [
+          // Status files are small and change between builds: network first, so a new notice shows on the next load rather than the one after.
+          { urlPattern: /\/data\/(notices|dfo-status)\.json$/, handler: 'NetworkFirst', options: { cacheName: 'status', networkTimeoutSeconds: 5, expiration: { maxEntries: 4 } } },
           { urlPattern: /\/data\/[^/]+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'data', expiration: { maxEntries: 10 } } },
           { urlPattern: /^https:\/\/api\.weather\.gc\.ca\//, handler: 'NetworkFirst', options: { cacheName: 'hydrometric', networkTimeoutSeconds: 10, expiration: { maxEntries: 80, maxAgeSeconds: 6 * 3600 } } },
           { urlPattern: /^https:\/\/(tile\.openstreetmap\.org|[abc]\.tile\.opentopomap\.org|server\.arcgisonline\.com|api\.maptiler\.com)\//, handler: 'CacheFirst', options: { cacheName: 'tiles', expiration: { maxEntries: 800, maxAgeSeconds: 14 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },

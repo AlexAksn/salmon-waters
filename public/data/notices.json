@@ -1,8 +1,28 @@
 {
-  "fetchedAt": "2026-10-15T05:37:43.810Z",
+  "fetchedAt": "2026-10-15T23:29:38.538Z",
   "ok": true,
   "error": null,
   "notices": [
+    {
+      "fn": "FN1122",
+      "docId": "370681",
+      "subject": "Chum - Region 2 Lower Mainland Tributary Systems - Opening - October 17, 2026",
+      "date": "2026-10-15",
+      "sent": "2026-10-15 15:37",
+      "url": "https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=370681&ID=all",
+      "region": true,
+      "waters": [
+        "chilliwack",
+        "alouette-upper",
+        "alouette-lower",
+        "chehalis",
+        "harrison-upper",
+        "harrison-lower",
+        "nicomen",
+        "serpentine",
+        "stave"
+      ]
+    },
     {
       "fn": "FN1114",
       "docId": "370551",

@@ -31,6 +31,8 @@ export const NOTICES: Record<string, string> = {
   FN0960: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366086&ID=all',
   FN0961: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366093&ID=all',
   FN1008: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=367431&ID=all',
+  // Chum opening Oct 17 - Nov 30, 2026 (notice of Oct 15; not yet on the DFO page). Drop or reconcile when the page is updated.
+  FN1122: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=370681&ID=all',
 };
 export const GLOBAL_RULES: string[] = [
   'Salmon fishing in Region 2 is allowed during daylight hours only.',
@@ -62,11 +64,13 @@ const LISTED: Water[] = [
       {sp:'chinook',kind:'keep',from:'09-01',to:'11-30',limit:'1 per day'},
       {sp:'coho',kind:'nr',from:'09-01',to:'09-30'},
       {sp:'coho',kind:'keep',from:'10-01',to:'12-31',limit:'1 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'alouette-lower', name:'Alouette River', sub:'216 St bridge down to the Pitt River', group:'Alouette River and tributaries',
     area:'Downstream of the 216th Street bridge to the confluence of the Pitt River.',
     rules:[
       {sp:'coho',kind:'keep',from:'10-01',to:'12-31',limit:'1 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'north-alouette', name:'North Alouette River', sub:'and tributaries', group:'Alouette River and tributaries',
     area:'North Alouette River and tributaries.',
@@ -108,6 +112,7 @@ const LISTED: Water[] = [
       {sp:'chinook',kind:'keep',from:'09-01',to:'12-31',limit:'4 per day, only 1 over 62 cm'},
       {sp:'coho',kind:'nr',from:'06-01',to:'08-31'},
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'chilliwack', name:'Chilliwack / Vedder River', sub:'incl. Sumas River below Barrowtown',
     area:'From a line between two fishing boundary signs 100 m downstream of the Chilliwack River / Slesse Creek confluence, downstream through the Vedder River and Vedder Canal, including the Sumas River from the Barrowtown Pump Station downstream to the fishing boundary signs near the Fraser River confluence.',
@@ -117,6 +122,7 @@ const LISTED: Water[] = [
       {sp:'chinook',kind:'keep',from:'09-01',to:'12-31',limit:'4 per day, only 2 over 62 cm'},
       {sp:'coho',kind:'nr',from:'07-01',to:'08-31'},
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'coquitlam', name:'Coquitlam River', sub:'mouth to Coquitlam Dam',
     area:'Coquitlam River.',
@@ -143,11 +149,13 @@ const LISTED: Water[] = [
     area:'From the outlet of Harrison Lake downstream to the Highway 7 bridge.',
     rules:[
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'harrison-lower', name:'Harrison River', sub:'Hwy 7 bridge to the Fraser',
     area:'From the Highway 7 bridge downstream to the confluence with the Fraser River.',
     rules:[
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'kanaka', name:'Kanaka Creek', sub:'below the 112 Ave bridge',
     area:'Downstream of the 112th Street bridge.',
@@ -190,6 +198,7 @@ const LISTED: Water[] = [
     area:'From the confluence of Siddle (Bell’s) Creek downstream to the Fraser River.',
     rules:[
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day, only 2 over 35 cm'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'norrish', name:'Norrish (Suicide) Creek', sub:'near Dewdney',
     area:'Norrish (Suicide) Creek.',
@@ -202,6 +211,7 @@ const LISTED: Water[] = [
       {sp:'chinook',kind:'keep',from:'09-01',to:'11-30',limit:'1 per day'},
       {sp:'chinook',kind:'nr',from:'12-01',to:'12-31'},
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'1 hatchery marked per day'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
   { id:'squamish', name:'Squamish River', sub:'incl. Powerhouse Channel',
     area:'Squamish River including the Powerhouse Channel.', notes:['Squamish watershed: 1 hatchery coho per day aggregate across all Squamish non-tidal systems.'],
@@ -213,6 +223,7 @@ const LISTED: Water[] = [
     area:'Downstream of the BC Hydro dam to the CPR railway bridge. Closed to salmon fishing: the Ruskin Spawning Channel (east bank, from the inlet near the dam to the boat-ramp crossing) and the Northrop Spawning Channel (west side, from the intake to where it rejoins the mainstem, including its fishway tributary).',
     rules:[
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day, only 2 over 35 cm'},
+      {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},
     ]},
 ];
 // Rivers with no listed salmon opportunity (shown thin grey so the answer "no" is visible on the map)
