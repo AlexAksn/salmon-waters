@@ -11,7 +11,7 @@ export default function Header({ date, sp, picks, onDate, onShift, onToday, onSp
       <div className="brand">
         <h1><a className="home" href={import.meta.env.BASE_URL} title="BC overview" onClick={(e) => { e.preventDefault(); onRegion(null); }}>Salmon Waters</a></h1>
         <select className="region" aria-label="Region" value={region.id} onChange={(e) => onRegion(e.target.value === 'bc' ? null : e.target.value)}>
-          {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.name} · DFO Region {r.num}</option>)}
+          {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.name} · Region {r.num}</option>)}
           <option value="bc">All of BC · overview</option>
         </select>
       </div>

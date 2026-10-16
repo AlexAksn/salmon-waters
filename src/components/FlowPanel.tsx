@@ -4,7 +4,7 @@ import { ageMinutes, fetchHistory, fetchTypical, fmtMetric, fmtQ, fmtReading, ha
 import { fmtDate, MON } from '../lib/rules';
 
 const HOURS = 72;
-const W = 360, H = 120, PL = 8, PR = 10, PT = 10, PB = 20;
+const W = 360, H = 150, PL = 8, PR = 10, PT = 12, PB = 20;
 
 /** River conditions for the detail view: current reading, trend, 72 h chart, and "normal for this month". */
 export default function FlowPanel({ gauge }: { gauge: Gauge }) {

@@ -43,12 +43,25 @@ export default function Overview({ date, onPick }: Props) {
       .catch(() => { /* denied */ }).finally(() => setLocating(false));
   };
   const pick = (r: RegionEntry | RegionStub) => { if (isMapped(r)) onPick(r.id); };
+  const hereRegion = typeof here === 'number' ? BC_REGIONS.find((r) => r.num === here) : undefined;
   const when = sameDay(date, new Date()) ? 'today' : `on ${fmtDate(date)}`;
   const line = (r: RegionEntry | RegionStub) => {
     if (!isMapped(r)) return <span className="muted">{r.note}</span>;
     const c = counts[r.id];
     return c ? <span className="cnt">{SUMMARY.map(([k, label], i) => <span key={k}>{i > 0 && ' · '}<b className={k}>{c[k]} {label}</b></span>)} {when}</span> : <span className="muted">Counting…</span>;
   };
+  const cards = (rs: (RegionEntry | RegionStub)[], cls: string) => (
+    <ul className={`list ov-list ${cls}`}>
+      {rs.map((r) => (
+        <li key={r.num} className={`card ${isMapped(r) ? 'on' : 'stub'}${here === r.num ? ' sel' : ''}`} onClick={() => pick(r)}>
+          <div className="h"><div><div className="nm">{r.name}</div><div className="sb">DFO Region {r.num}{here === r.num && ' · you are here'}</div></div>
+            {isMapped(r) ? <button className="btn primary">Open map</button> : <a className="btn" href={r.dfoUrl} target="_blank" rel="noopener">DFO page</a>}
+          </div>
+          <div className="rule">{line(r)}</div>
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div className="ov">
       <header className="top ov-top">
@@ -56,6 +69,7 @@ export default function Overview({ date, onPick }: Props) {
         <p className="tag">Pick a region. Two are mapped river by river; the rest show what DFO publishes and are next in line.</p>
       </header>
       <div className="ov-body">
+        {cards(BC_REGIONS.filter(isMapped), 'mapped')}
         <div className="ov-map">
           <svg viewBox={VIEWBOX} role="img" aria-label="Map of BC fishing regions">
             {outlines && BC_REGIONS.map((r) => {
@@ -74,19 +88,10 @@ export default function Overview({ date, onPick }: Props) {
           <div className="ov-tools">
             <button className="btn" onClick={locate} disabled={!outlines || locating}>{locating ? 'Locating…' : 'Where am I?'}</button>
             {here === 'outside' && <span className="muted">Outside BC, as far as the map can tell.</span>}
-            {typeof here === 'number' && <span>You are in <b>Region {here}</b>.</span>}
+            {hereRegion && <span>You are in <b>{hereRegion.name}</b>{isMapped(hereRegion) ? <> · <button className="btn primary" onClick={() => onPick(hereRegion.id)}>Open map</button></> : <span className="muted"> (not mapped yet)</span>}</span>}
           </div>
         </div>
-        <ul className="list ov-list">
-          {BC_REGIONS.map((r) => (
-            <li key={r.num} className={`card ${isMapped(r) ? 'on' : 'stub'}${here === r.num ? ' sel' : ''}`} onClick={() => pick(r)}>
-              <div className="h"><div><div className="nm">{r.name}</div><div className="sb">DFO Region {r.num}{here === r.num && ' · you are here'}</div></div>
-                {isMapped(r) ? <button className="btn primary">Open map</button> : <a className="btn" href={r.dfoUrl} target="_blank" rel="noopener">DFO page</a>}
-              </div>
-              <div className="rule">{line(r)}</div>
-            </li>
-          ))}
-        </ul>
+        {cards(BC_REGIONS.filter((r) => !isMapped(r)), 'stubs')}
       </div>
       <div className="foot">Not an official source: confirm with DFO, fishery notices and on-site signs before you fish. Region outlines: BC wildlife management units (Open Government Licence – BC). · <a href="https://github.com/AlexAksn/salmon-waters" target="_blank" rel="noopener">About / report a problem</a></div>
     </div>

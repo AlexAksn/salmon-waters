@@ -125,9 +125,13 @@ export default function App() {
 
   const selectFromList = (id: string) => { setSel(id); mapRef.current?.zoomTo(id); };
   const selectFromMap = (id: string) => { setSel(id); };
-  // Phones: after the panel re-renders (list <-> detail), put its top right under the pinned map. Done after layout and
-  // with an explicit position: scrollIntoView before the swap ends up clamped mid-page once the content shrinks (iOS Safari).
+  // Phones: after the panel swaps (list <-> detail), put its top right under the pinned map. Only on a selection change:
+  // a fresh load keeps the header in view. Done after layout and with an explicit position: scrollIntoView before the
+  // swap ends up clamped mid-page once the content shrinks (iOS Safari).
+  const prevSel = useRef(sel);
   useLayoutEffect(() => {
+    if (prevSel.current === sel) return;
+    prevSel.current = sel;
     if (!data || window.innerWidth > 900) return;
     const panel = panelRef.current, map = document.querySelector('.mapwrap');
     if (!panel || !map) return;
