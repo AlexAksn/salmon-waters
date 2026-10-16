@@ -26,6 +26,15 @@ export const KIND_STATUS: Record<Rule['kind'], Status | 'gear'> = { keep: 'open'
 
 /** Unlisted rivers are drawn thin and kept behind a toggle; tidal and listed waters share the main list. */
 export const isUnlisted = (w: Water) => w.elsewhere?.status === 'none';
+/** The statuses the summary bar counts, with their labels. */
+export type Counts = Record<'open' | 'cr' | 'closed', number>;
+export const SUMMARY: [keyof Counts, string][] = [['open', 'open'], ['cr', 'catch & release'], ['closed', 'closed']];
+/** Listed waters by status (unlisted rivers never count). */
+export function countStatuses(waters: Water[], status: (w: Water) => Status): Counts {
+  const c: Counts = { open: 0, cr: 0, closed: 0 };
+  for (const w of waters) { if (isUnlisted(w)) continue; const s = status(w); if (s in c) c[s as keyof Counts]++; }
+  return c;
+}
 
 // ---- date windows ----
 const md = (d: Date) => (d.getMonth() + 1) * 100 + d.getDate();

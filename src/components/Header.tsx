@@ -2,16 +2,17 @@ import { useRegion } from '../lib/region';
 import { isoLocal, parseIso, type SpeciesPick, type SpeciesPickOption } from '../lib/rules';
 import { REGIONS } from '../regions';
 
-interface Props { date: Date; sp: SpeciesPick; picks: SpeciesPickOption[]; onDate: (d: Date) => void; onShift: (n: number) => void; onToday: () => void; onSp: (s: SpeciesPick) => void; onRegion: (id: string) => void }
+interface Props { date: Date; sp: SpeciesPick; picks: SpeciesPickOption[]; onDate: (d: Date) => void; onShift: (n: number) => void; onToday: () => void; onSp: (s: SpeciesPick) => void; onRegion: (id: string | null) => void }
 
 export default function Header({ date, sp, picks, onDate, onShift, onToday, onSp, onRegion }: Props) {
   const region = useRegion();
   return (
     <header className="top">
       <div className="brand">
-        <h1>Salmon Waters</h1>
-        <select className="region" aria-label="Region" value={region.id} onChange={(e) => onRegion(e.target.value)}>
+        <h1><a className="home" href={import.meta.env.BASE_URL} title="BC overview" onClick={(e) => { e.preventDefault(); onRegion(null); }}>Salmon Waters</a></h1>
+        <select className="region" aria-label="Region" value={region.id} onChange={(e) => onRegion(e.target.value === 'bc' ? null : e.target.value)}>
           {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.name} · DFO Region {r.num}</option>)}
+          <option value="bc">All of BC · overview</option>
         </select>
       </div>
       <div className="datebar" role="group" aria-label="Date">

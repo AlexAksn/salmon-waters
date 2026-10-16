@@ -73,14 +73,17 @@ scripts/geomlib.py        shared geometry helpers (simplify, clip, stem slicing,
 scripts/geo.py            raw/<id>/ -> build/<id>/base.json (+ stems); `--boundaries` prints bridge/rail × river crossings
 scripts/build-geo.sh      geo.py + the region's waters.py -> public/data/<id>/
 scripts/regions.mjs       lists src/regions/*/region.json for the build scripts
+scripts/bc-regions.py     wildlife management units -> public/data/bc-regions.json (topological dissolve, one ring per region)
+src/components/Overview.tsx  BC overview page: region outlines coloured by today's counts; unmapped regions as stubs (src/regions/index.ts)
 scripts/check-dfo.mjs     prebuild: per region, fetch its DFO page -> public/data/<id>/dfo-status.json (date + table hash)
 scripts/fetch-notices.mjs prebuild: DFO notice search pages -> public/data/<id>/notices.json (regex-matched to water ids)
 ```
-Regenerate geometry: `npm run data:raw -- r2 && npm run data:geo -- r2`.
+Regenerate geometry: `npm run data:raw -- r2 && npm run data:geo -- r2`. Region outlines for the BC overview page
+(`public/data/bc-regions.json`, dissolved from BC's wildlife management units): `npm run data:regions`.
 
 Adding a region: copy `src/regions/r2/` to `src/regions/<id>/`, transcribe that region's DFO table into `regs.ts`, fill
 `region.json` (page, hash, notice patterns) and `geo.json` (bbox, stream names), run the two data commands, and add the
-entry to `src/regions/index.ts`. `?r=<id>` opens it.
+entry to `src/regions/index.ts` (and drop its stub there). `?r=<id>` opens it; the bare URL (or the brand) is the overview.
 
 ## Status logic
 closed rule active → **Closed**; else a retention rule for the species → **Open**; else a non-retention rule → **Catch & release**;

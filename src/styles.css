@@ -213,3 +213,23 @@ details.tbl summary{font-size:12px;color:var(--muted);cursor:pointer}
 /* DFO freshness banner */
 .banner{background:var(--cr-soft);color:var(--fg);border-bottom:1px solid var(--line);padding:6px 16px;font-size:13px;display:grid;gap:4px}
 .banner b{color:var(--cr)}
+
+/* ---- BC overview ---- */
+.ov{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.ov-top{flex-wrap:wrap} .ov-top .tag{margin:0;color:var(--muted);font-size:13px;flex:1 1 320px}
+.ov-body{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;padding:16px;flex:1}
+.ov-map{position:relative;background:var(--sea);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:320px}
+.ov-map svg{width:100%;height:100%;max-height:72vh;display:block}
+.ov-map .reg path{fill:var(--none);fill-opacity:.22;stroke:var(--panel);stroke-width:4;vector-effect:non-scaling-stroke;transition:fill-opacity .15s}
+.ov-map .reg.on path{fill:var(--open);fill-opacity:.4;cursor:pointer}
+.ov-map .reg:focus{outline:none} /* the default focus ring is the group's bounding box; highlight the shape instead */
+.ov-map .reg.on:hover path,.ov-map .reg.on:focus-visible path{fill-opacity:.65}
+.ov-map .reg.on:focus-visible path,.ov-map .reg.here path{stroke:var(--accent);stroke-width:6}
+.ov-map .reg text{font-family:var(--font-display);font-size:34px;fill:var(--lbl);paint-order:stroke;stroke:var(--lbl-halo);stroke-width:6px;stroke-linejoin:round;pointer-events:none}
+.ov-map .reg text .n{font-weight:700;font-size:46px}
+.ov-map .reg:not(.on) text{opacity:.55}
+.ov-tools{position:absolute;left:16px;bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px}
+.ov-list .card.on{--sc:var(--open)} .ov-list .card.stub{--sc:var(--none);cursor:default} .ov-list .card.stub:hover{border-color:var(--line)}
+.ov-list .card .h{align-items:center} .cnt b{color:var(--sc)}
+.brand h1 .home{color:inherit;text-decoration:none} .brand h1 .home:hover{color:var(--accent)}
+@media (max-width:900px){ .ov-body{grid-template-columns:1fr;padding:12px} .ov-map svg{max-height:52vh} .ov-tools{position:static;margin-top:8px} }

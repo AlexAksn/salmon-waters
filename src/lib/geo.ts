@@ -34,3 +34,11 @@ export function waterMid(w: Water, wg: WatersGeo, base: BaseData): LatLon | null
   const seg = wg.geo[w.id]?.[0];
   return seg ? toLatLon(seg[Math.floor(seg.length / 2)]) : null;
 }
+
+/** The device position as [lat, lon]; rejects when geolocation is unavailable or denied. */
+export function getPosition(): Promise<LatLon> {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('no geolocation'));
+    navigator.geolocation.getCurrentPosition((pos) => res([pos.coords.latitude, pos.coords.longitude]), rej, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 });
+  });
+}

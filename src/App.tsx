@@ -2,76 +2,90 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Basemap } from './lib/basemaps';
 import { fetchMany, FLOW_TTL_MS, type Reading } from './lib/flow';
 import type { BaseData, LatLon, WatersGeo } from './lib/geo';
-import { km, waterMid } from './lib/geo';
+import { getPosition, km, waterMid } from './lib/geo';
 import type { SalmonMap } from './lib/map';
 import { RegionContext } from './lib/region';
 import { addDays, isUnlisted, speciesPicksFor, statusOf, type SpeciesPick, type Status } from './lib/rules';
-import { readUrl, writeUrl } from './lib/urlState';
+import { readUrl, writeUrl, type UrlState } from './lib/urlState';
 import { fmtNoticeDate, recentNotices, type Notice, type NoticesFile } from './lib/notices';
-import { DEFAULT_REGION, regionEntry } from './regions';
+import { regionEntry } from './regions';
 import type { RegionData, Water } from './regions/model';
 import Header from './components/Header';
 import MapView from './components/MapView';
+import Overview from './components/Overview';
 import Panel from './components/Panel';
 
 export type SortMode = 'status' | 'name' | 'near';
 /** Device preferences. Species is deliberately not here: it is a per-trip choice carried only by the URL. */
-export interface Prefs { sort: SortMode; near: string; showUn: boolean; base: Basemap; region?: string }
+export interface Prefs { sort: SortMode; near: string; showUn: boolean; base: Basemap }
 interface DfoStatus { ok: boolean; checkedAt: string; pageModified: string | null; stale: boolean }
 /** A region's module plus its geometry: everything below the header needs all three. */
 interface Loaded { region: RegionData; base: BaseData; wg: WatersGeo }
 const PREF_KEY = 'sw-prefs';
 const NO_WATERS: Water[] = [];
+const NO_FLOWS: Record<string, Reading[]> = {};
+/** URL -> the five URL-backed values with defaults applied; used at first load and again on Back/Forward. */
+const fromUrl = (u: Partial<UrlState>, base: Basemap): UrlState => ({ region: u.region ?? null, date: u.date ?? new Date(), sp: u.sp ?? 'any', sel: u.sel ?? null, base: u.base ?? base });
 function loadPrefs(): Prefs {
   const d: Prefs = { sort: 'status', near: 'Vancouver', showUn: false, base: 'chart' };
-  try { const { sp: _legacy, ...saved } = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); return { ...d, ...saved }; } catch { return d; }
+  try { const { sp: _legacy, region: _legacy2, ...saved } = JSON.parse(localStorage.getItem(PREF_KEY) || '{}'); return { ...d, ...saved }; } catch { return d; }
 }
 const loadJson = <T,>(region: string, name: string, init?: RequestInit) => fetch(`${import.meta.env.BASE_URL}data/${region}/${name}`, init).then((r) => r.json() as Promise<T>);
 // Status files: revalidate past the host's 10-minute HTTP cache (a conditional request, 304 when unchanged).
 const LIVE: RequestInit = { cache: 'no-cache' };
 
 export default function App() {
-  const url = useMemo(readUrl, []);
   const prefs0 = useMemo(loadPrefs, []);
-  // Region: URL wins, then the last one used on this device, then the default.
-  const [regionId, setRegionId] = useState(url.region ?? (regionEntry(prefs0.region)?.id ?? DEFAULT_REGION));
+  const url = useMemo(() => fromUrl(readUrl(), prefs0.base), [prefs0.base]);
+  // Region from the URL (?r=<id>); a bare URL is the BC overview.
+  const [regionId, setRegionId] = useState<string | null>(url.region);
   const [data, setData] = useState<Loaded | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [date, setDate] = useState<Date>(url.date ?? new Date());
-  const [sp, setSp] = useState<SpeciesPick>(url.sp ?? 'any');
-  const [sel, setSel] = useState<string | null>(url.sel ?? null);
-  const [base, setBase] = useState<Basemap>(url.base ?? prefs0.base);
+  const [date, setDate] = useState<Date>(url.date);
+  const [sp, setSp] = useState<SpeciesPick>(url.sp);
+  const [sel, setSel] = useState<string | null>(url.sel);
+  const [base, setBase] = useState<Basemap>(url.base);
   const [filter, setFilter] = useState<Status | null>(null);
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<SortMode>(prefs0.sort);
   const [near, setNear] = useState(prefs0.near);
   const [showUn, setShowUn] = useState(prefs0.showUn);
   const [userLoc, setUserLoc] = useState<LatLon | null>(null);
-  const [flows, setFlows] = useState<Record<string, Reading[]>>({});
+  const [flows, setFlows] = useState<Record<string, Reading[]>>(NO_FLOWS);
   const [dfo, setDfo] = useState<DfoStatus | null>(null);
   const [noticeFile, setNoticeFile] = useState<NoticesFile | null>(null);
   const mapRef = useRef<SalmonMap | null>(null);
   const panelRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    setData(null); setDfo(null); setNoticeFile(null); setFlows(NO_FLOWS); setErr(null);
     const entry = regionEntry(regionId);
-    if (!entry) { setErr(`Unknown region ${regionId}`); return; }
+    if (!entry) return; // the overview
     let live = true;
-    setData(null); setDfo(null); setNoticeFile(null); setFlows({});
-    Promise.all([entry.load(), loadJson<BaseData>(regionId, 'base.json'), loadJson<WatersGeo>(regionId, 'waters.json')])
+    Promise.all([entry.load(), loadJson<BaseData>(entry.id, 'base.json'), loadJson<WatersGeo>(entry.id, 'waters.json')])
       .then(([region, base, wg]) => { if (live) setData({ region, base, wg }); }).catch((e) => { if (live) setErr(String(e)); });
-    loadJson<DfoStatus>(regionId, 'dfo-status.json', LIVE).then((d) => { if (live) setDfo(d); }).catch(() => { /* optional */ });
-    loadJson<NoticesFile>(regionId, 'notices.json', LIVE).then((n) => { if (live) setNoticeFile(n); }).catch(() => { /* optional */ });
+    loadJson<DfoStatus>(entry.id, 'dfo-status.json', LIVE).then((d) => { if (live) setDfo(d); }).catch(() => { /* optional */ });
+    loadJson<NoticesFile>(entry.id, 'notices.json', LIVE).then((n) => { if (live) setNoticeFile(n); }).catch(() => { /* optional */ });
     return () => { live = false; };
   }, [regionId]);
   useEffect(() => { writeUrl({ region: regionId, date, sp, sel, base }); }, [regionId, date, sp, sel, base]);
-  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base, region: regionId } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base, regionId]);
+  // Back/Forward: the URL is the state.
+  useEffect(() => {
+    const onPop = () => {
+      const u = fromUrl(readUrl(), prefs0.base);
+      setRegionId(u.region); setSel(u.sel); setSp(u.sp); setDate(u.date); setBase(u.base); setFilter(null); setQ('');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [prefs0.base]);
+  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base]);
 
   const region = data?.region ?? null;
   const waters = region?.waters ?? NO_WATERS;
   // "Nearest to <city>" carried over from another region: fall back to this region's main city.
   useEffect(() => { if (region && near !== 'me' && !region.cities.some((c) => c[0] === near)) setNear(region.cities[0][0]); }, [region, near]);
-  const switchRegion = (id: string) => { if (id === regionId) return; setSel(null); setFilter(null); setQ(''); setRegionId(id); };
+  // Changing region is navigation: a new history entry (which the URL effect then fills in), so Back returns here.
+  const switchRegion = (id: string | null) => { if (id === regionId) return; history.pushState(null, '', location.href); setSel(null); setFilter(null); setQ(''); setRegionId(id); };
   const picks = useMemo(() => speciesPicksFor(waters), [waters]);
   // A species from the URL that this region has no rules for falls back to Any.
   useEffect(() => { if (region && !picks.some((p) => p.id === sp)) setSp('any'); }, [region, picks, sp]);
@@ -121,17 +135,13 @@ export default function App() {
     window.scrollTo({ top: Math.max(0, Math.round(top)), behavior: 'auto' });
   }, [sel, data]);
   const locate = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { const p: LatLon = [pos.coords.latitude, pos.coords.longitude]; setUserLoc(p); setNear('me'); setSort('near'); mapRef.current?.setUserLocation(p[0], p[1]); },
-      () => { /* denied: keep city-based sort */ },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
-    );
+    getPosition().then((p) => { setUserLoc(p); setNear('me'); setSort('near'); mapRef.current?.setUserLocation(p[0], p[1]); }).catch(() => { /* denied: keep city-based sort */ });
   };
   // A saved "nearest to my location" preference needs a fresh position each visit.
   const wantsLocation = !!data && sort === 'near' && near === 'me' && !userLoc;
   useEffect(() => { if (wantsLocation) locate(); }, [wantsLocation]); // eslint-disable-line react-hooks/exhaustive-deps -- locate is stable enough; runs once per data load
 
+  if (regionId === null) return <Overview date={date} onPick={switchRegion} />;
   if (err) return <div className="loading">Could not load map data: {err}</div>;
   if (!data || !region) return <div className="loading">Loading rivers…</div>;
   return (

@@ -11,6 +11,7 @@
     "test": "vitest run",
     "data:raw": "scripts/fetch_raw.sh",
     "data:geo": "scripts/build-geo.sh",
+    "data:regions": "scripts/fetch_bc_regions.sh",
     "prebuild": "node scripts/check-dfo.mjs && node scripts/fetch-notices.mjs",
     "check:dfo": "node scripts/check-dfo.mjs",
     "check:notices": "node scripts/fetch-notices.mjs"

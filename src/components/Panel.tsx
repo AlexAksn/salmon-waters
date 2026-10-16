@@ -4,7 +4,7 @@ import type { Water } from '../regions/model';
 import { useRegion } from '../lib/region';
 import type { Reading } from '../lib/flow';
 import type { WatersGeo } from '../lib/geo';
-import { isUnlisted, STATUS_ORDER, type SpeciesPick, type Status } from '../lib/rules';
+import { countStatuses, isUnlisted, STATUS_ORDER, SUMMARY, type SpeciesPick, type Status } from '../lib/rules';
 import ChangingSoon from './ChangingSoon';
 import Notices from './Notices';
 import { noticesFor, regionNotices, type Notice } from '../lib/notices';
@@ -17,7 +17,6 @@ interface Props {
   onFilter: (f: Status | null) => void; onQ: (q: string) => void; onSort: (s: SortMode) => void; onNear: (n: string) => void; onShowUn: (b: boolean) => void;
   onSelect: (id: string) => void; onBack: () => void; onZoom: (id: string) => void; onLocate: () => void;
 }
-const SUMMARY: [Status, string][] = [['open', 'open'], ['cr', 'catch & release'], ['closed', 'closed']];
 const byName = (a: { name: string; sub?: string }, b: { name: string; sub?: string }) => a.name.localeCompare(b.name) || (a.sub || '').localeCompare(b.sub || '');
 
 const LEGEND: [Status, string][] = [['open', 'Open'], ['cr', 'Catch & release'], ['closed', 'Closed'], ['none', 'Not listed'], ['tidal', 'Tidal']];
@@ -28,8 +27,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
   const [footOpen, setFootOpen] = useState(false);
   const LISTED = useMemo(() => region.waters.filter((w) => !isUnlisted(w)), [region]), UNLISTED = useMemo(() => region.waters.filter(isUnlisted), [region]);
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [p.sel]); // a newly opened detail starts at its top
-  const counts: Record<string, number> = { open: 0, cr: 0, closed: 0 };
-  LISTED.forEach((w) => { const s = p.status[w.id]; if (s in counts) counts[s]++; });
+  const counts = countStatuses(region.waters, (w) => p.status[w.id]);
   const q = p.q.trim().toLowerCase();
   const matches = (w: { name: string; sub?: string; group?: string }) => !q || `${w.name} ${w.sub || ''} ${w.group || ''}`.toLowerCase().includes(q);
   let ws = LISTED.filter(matches);
