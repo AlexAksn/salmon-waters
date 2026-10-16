@@ -109,15 +109,13 @@ const toBlob = (cv: HTMLCanvasElement) => new Promise<Blob>((res, rej) => cv.toB
 const fileName = (s: ShareInput) => `salmon-waters-${s.w.id}-${s.date.getFullYear()}${String(s.date.getMonth() + 1).padStart(2, '0')}${String(s.date.getDate()).padStart(2, '0')}.png`;
 
 export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'failed';
-/** Phones/tablets: share sheet with image + text + link. Desktop: copy the link and save the image. */
+/** Share sheet with image + text + link where supported; otherwise copy the link and save the image. */
 export async function shareWater(s: ShareInput): Promise<ShareResult> {
   const text = shareText(s), title = shareTitle(s);
   let file: File | null = null;
   try { file = new File([await toBlob(await drawCard(s))], fileName(s), { type: 'image/png' }); } catch { file = null; }
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  // Desktop browsers have the API too, but the macOS sheet's "Copy" pastes the PNG's temp path; the copy + download path is what people want there.
-  const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  if (touch && typeof nav.share === 'function') {
+  if (typeof nav.share === 'function') {
     // With files attached some targets drop `url`, so it is already in `text`.
     const data: ShareData = file && nav.canShare?.({ files: [file] }) ? { title, text, files: [file] } : { title, text: `${title}\n${s.url}`, url: s.url };
     try { await nav.share(data); return 'shared'; } catch (e) { if ((e as Error).name === 'AbortError') return 'cancelled'; }
