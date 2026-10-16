@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { type Gauge, wateroffice } from '../data/gauges';
-import { ageMinutes, fetchHistory, fetchTypical, fmtMetric, fmtQ, fmtReading, hasFlow, latest, metric, metricRange, trend, TREND_ARROW, vsTypical, type Reading, type Typical } from '../lib/flow';
+import type { Gauge } from '../regions/model';
+import { ageMinutes, fetchHistory, fetchTypical, fmtMetric, fmtQ, fmtReading, hasFlow, latest, metric, metricRange, trend, TREND_ARROW, vsTypical, wateroffice, type Reading, type Typical } from '../lib/flow';
 import { fmtDate, MON } from '../lib/rules';
 
 const HOURS = 72;

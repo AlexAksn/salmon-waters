@@ -49,26 +49,38 @@ Optional `.env`: `VITE_MAPTILER_KEY=…` switches Streets/Topo/Satellite to MapT
 OpenTopoMap / Esri tile servers are fine for personal use, not for heavy traffic).
 
 ## Layout
+Rules and geometry are partitioned by DFO region: everything specific to one region lives in `src/regions/<id>/`
+and `public/data/<id>/`; the engine, map and UI are shared. Region 2 is the only region so far.
 ```
-src/data/regs.ts      rules table transcribed from the DFO page — edit this when DFO changes the page; species registry
-                      (chinook, coho, chum, pink, sockeye) — a rule naming a new species adds its chip/strip row automatically
-src/data/source.json  DFO page url, date and table hash the rules were transcribed from (check-dfo compares against it)
+src/regions/model.ts        data model every region shares: Rule/Water types, species registry (chinook, coho, chum,
+                            pink, sockeye) — a rule naming a new species adds its chip/strip row automatically
+src/regions/index.ts        region registry (id, name, DFO page, home view, lazy loader); the first entry is the default
+src/regions/r2/regs.ts      Region 2 rules table transcribed from the DFO page — edit this when DFO changes the page
+src/regions/r2/region.json  DFO page url, date and table hash the rules came from (check-dfo compares), notice patterns
+src/regions/r2/gauges.ts    water id -> ECCC station; edit to add/replace gauges
+src/regions/r2/geo.json     geometry pipeline inputs: bbox, FWA stream names, roads, rail, boundary probes
+src/regions/r2/waters.py    build/r2/stems -> waters.json (centreline slice per stretch + markers; measures by hand)
 src/lib/rules.ts      status engine (date windows incl. wrap-around + "until further notice", season runs, upcoming changes)
+src/lib/region.ts     the loaded region as React context (useRegion) + makeRegion
 src/lib/map.ts        Leaflet controller (per-pane canvases, merged vector base, tile basemaps, status painting, markers)
 src/lib/geo.ts        geometry types + distance helpers
 src/lib/flow.ts       ECCC hydrometric API client (realtime + HYDAT monthly means), trend + "vs typical" logic
-src/data/gauges.ts    water id -> ECCC station; edit to add/replace gauges
 src/components/       Header, MapView, Panel (list/detail), WaterCard, WaterDetail, SeasonStrip, ChangingSoon
-public/data/base.json     vector basemap: land, lakes, river polygons, highways, secondary roads, rail (~1 MB)
-public/data/waters.json   river centreline slice per regulated stretch + boundary markers (~200 KB)
-scripts/fetch_raw.sh      download raw layers from BC Data Catalogue WFS into raw/
+public/data/r2/base.json    vector basemap: land, lakes, river polygons, highways, secondary roads, rail (~2 MB)
+public/data/r2/waters.json  river centreline slice per regulated stretch + boundary markers (~200 KB)
+scripts/fetch_raw.sh      download a region's raw layers (per its geo.json) from BC Data Catalogue WFS into raw/<id>/
 scripts/geomlib.py        shared geometry helpers (simplify, clip, stem slicing, projection)
-scripts/geo.py            raw/ -> build/base.json (+ stems); `--boundaries` prints bridge/rail × river crossings
-scripts/waters.py         build/stems -> build/waters.json (segment slices + markers)
-scripts/check-dfo.mjs     prebuild: fetch DFO page -> public/data/dfo-status.json (date + table hash)
-scripts/fetch-notices.mjs prebuild: DFO notice search pages -> public/data/notices.json (regex-matched to water ids)
+scripts/geo.py            raw/<id>/ -> build/<id>/base.json (+ stems); `--boundaries` prints bridge/rail × river crossings
+scripts/build-geo.sh      geo.py + the region's waters.py -> public/data/<id>/
+scripts/regions.mjs       lists src/regions/*/region.json for the build scripts
+scripts/check-dfo.mjs     prebuild: per region, fetch its DFO page -> public/data/<id>/dfo-status.json (date + table hash)
+scripts/fetch-notices.mjs prebuild: DFO notice search pages -> public/data/<id>/notices.json (regex-matched to water ids)
 ```
-Regenerate geometry: `scripts/fetch_raw.sh && npm run data:geo`.
+Regenerate geometry: `npm run data:raw -- r2 && npm run data:geo -- r2`.
+
+Adding a region: copy `src/regions/r2/` to `src/regions/<id>/`, transcribe that region's DFO table into `regs.ts`, fill
+`region.json` (page, hash, notice patterns) and `geo.json` (bbox, stream names), run the two data commands, and add the
+entry to `src/regions/index.ts`. `?r=<id>` opens it.
 
 ## Status logic
 closed rule active → **Closed**; else a retention rule for the species → **Open**; else a non-retention rule → **Catch & release**;

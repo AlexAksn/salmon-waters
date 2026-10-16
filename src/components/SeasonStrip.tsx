@@ -1,4 +1,4 @@
-import type { Water } from '../data/regs';
+import type { Water } from '../regions/model';
 import { dayOfYear, MON, seasonRuns, SPECIES_ABBR, STATUS_LABEL, waterFish, type Fish } from '../lib/rules';
 
 export default function SeasonStrip({ w, date }: { w: Water; date: Date }) {

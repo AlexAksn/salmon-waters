@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { WATERS } from '../data/regs';
+import { useRegion } from '../lib/region';
 import { fmtDate, SPN, STATUS_LABEL, upcoming } from '../lib/rules';
 
 export default function ChangingSoon({ date, onSelect }: { date: Date; onSelect: (id: string) => void }) {
-  const ev = useMemo(() => upcoming(date, 45, WATERS), [date]);
+  const { waters } = useRegion();
+  const ev = useMemo(() => upcoming(date, 45, waters), [date, waters]);
   return (
     <details className="soon" open>
       <summary><span>Changing soon</span><small>{ev.length ? `next 45 days · from ${fmtDate(date)}` : 'nothing in the next 45 days'}</small></summary>

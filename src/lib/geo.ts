@@ -1,4 +1,4 @@
-import type { Water } from '../data/regs';
+import type { Water } from '../regions/model';
 
 export type Coord = [lon: number, lat: number];
 export type LatLon = [lat: number, lon: number];

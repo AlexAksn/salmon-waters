@@ -1,5 +1,5 @@
-import { NOTICES, SOURCE_URL, type Water } from '../data/regs';
-import { GAUGES } from '../data/gauges';
+import type { Water } from '../regions/model';
+import { useRegion } from '../lib/region';
 import type { WatersGeo } from '../lib/geo';
 import { active, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, waterFish, type Status } from '../lib/rules';
 import FlowPanel from './FlowPanel';
@@ -15,11 +15,11 @@ function nearMarks(w: Water, wg: WatersGeo) {
   const px = (maxx - minx) * 0.02 + 0.002, py = (maxy - miny) * 0.02 + 0.002;
   return wg.marks.filter((m) => m.k !== 'i' && m.c[0] >= minx - px && m.c[0] <= maxx + px && m.c[1] >= miny - py && m.c[1] <= maxy + py);
 }
-const Notice = ({ id }: { id?: string }) => (id ? <> <a href={NOTICES[id]} target="_blank" rel="noopener">{id}</a></> : null);
-
 export default function WaterDetail({ w, date, status, wg, notices, onBack, onZoom }: Props) {
+  const region = useRegion();
   const day = w.elsewhere ? null : daySummary(w, date);
   const marks = nearMarks(w, wg);
+  const notice = (id?: string) => (id ? <> <a href={region.notices[id]} target="_blank" rel="noopener">{id}</a></> : null);
   return (
     <div className="detail">
       <button className="back" onClick={onBack}>‹ All waters</button>
@@ -37,7 +37,7 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
             <ul>
               {!day.closed && waterFish(w).map((f) => {
                 const { keep, nr } = day.fish[f];
-                return <li key={f}><b>{SPN[f]}:</b> {keep.length ? keep.map((r, i) => <span key={i}>{i > 0 && '; '}{r.limit}<Notice id={r.notice} /></span>) : nr.length ? 'catch & release only (non-retention)' : 'no opportunity today'}</li>;
+                return <li key={f}><b>{SPN[f]}:</b> {keep.length ? keep.map((r, i) => <span key={i}>{i > 0 && '; '}{r.limit}{notice(r.notice)}</span>) : nr.length ? 'catch & release only (non-retention)' : 'no opportunity today'}</li>;
               })}
               {!day.closed && waterFish(w).length < FISH.length && <li className="muted">Other salmon: no opportunity listed</li>}
               {day.gear.map((r, i) => <li key={`g${i}`}><b>Gear:</b> {r.limit}</li>)}
@@ -54,7 +54,7 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
         </div>
       )}
       {day && <SeasonStrip w={w} date={date} />}
-      {GAUGES[w.id] && <FlowPanel gauge={GAUGES[w.id]} />}
+      {region.gauges[w.id] && <FlowPanel gauge={region.gauges[w.id]} />}
       {w.area && <dl className="kv"><dt>Where</dt><dd>{w.area}</dd>{w.group && <><dt>Group</dt><dd>{w.group}</dd></>}</dl>}
       {w.notes?.length ? <ul className="marks">{w.notes.map((n) => <li key={n}>{n}</li>)}</ul> : null}
       {w.rules.length > 0 && (
@@ -67,7 +67,7 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
                 <tr key={i} className={active(r, date) ? 'act' : ''}>
                   <td><span className={`dot ${KIND_STATUS[r.kind]}`} />{SPN[r.sp]}</td>
                   <td className="d">{fmtMD(r.from)} – {r.to ? fmtMD(r.to) : 'further notice'}</td>
-                  <td>{r.kind === 'nr' ? 'Non-retention (catch & release)' : r.limit}<Notice id={r.notice} /></td>
+                  <td>{r.kind === 'nr' ? 'Non-retention (catch & release)' : r.limit}{notice(r.notice)}</td>
                 </tr>
               ))}
             </tbody>
@@ -82,7 +82,7 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
       )}
       <div className="actions">
         <button className="btn primary" onClick={onZoom}>Zoom to this water</button>
-        <a className="btn" href={SOURCE_URL} target="_blank" rel="noopener">DFO source page</a>
+        <a className="btn" href={region.dfo.url} target="_blank" rel="noopener">DFO source page</a>
       </div>
     </div>
   );

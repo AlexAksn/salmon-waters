@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { WATERS } from '../data/regs';
-import { isUnlisted, statusOf, upcoming, WATER_BY_ID, type SpeciesPick, type Status } from './rules';
+import { WATERS } from '../regions/r2/regs';
+import { isUnlisted, statusOf, upcoming, type SpeciesPick, type Status } from './rules';
 
-const W = (id: string) => WATER_BY_ID.get(id)!;
+const BY_ID = new Map(WATERS.map((w) => [w.id, w]));
+const W = (id: string) => BY_ID.get(id)!;
 const D = (m: number, d: number) => new Date(2026, m - 1, d);
 const cases: [string, Date, SpeciesPick, Status][] = [
   ['chilliwack', D(10, 14), 'any', 'open'], ['chilliwack', D(10, 14), 'chinook', 'open'], ['chilliwack', D(7, 15), 'coho', 'cr'], ['chilliwack', D(3, 1), 'any', 'none'],

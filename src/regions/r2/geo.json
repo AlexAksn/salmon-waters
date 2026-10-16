@@ -1,0 +1,289 @@
+{
+ "bbox": [
+  -125.6,
+  48.2,
+  -120.6,
+  50.8
+ ],
+ "streams": [
+  "Alouette River",
+  "North Alouette River",
+  "Ashlu Creek",
+  "Capilano River",
+  "Chapman Creek",
+  "Cheakamus River",
+  "Chehalis River",
+  "Chilliwack River",
+  "Vedder River",
+  "Sumas River",
+  "Coquitlam River",
+  "De Boville Slough",
+  "Fraser River",
+  "Harrison River",
+  "Kanaka Creek",
+  "Mamquam River",
+  "Nicomekl River",
+  "Nicomen Slough",
+  "Norrish Creek",
+  "Serpentine River",
+  "Squamish River",
+  "Stave River",
+  "Slesse Creek",
+  "Hyde Creek",
+  "Pitt River",
+  "Lillooet River",
+  "Elaho River",
+  "Lois River",
+  "Powell River",
+  "Seymour River",
+  "Indian River",
+  "Lynn Creek",
+  "Brunette River",
+  "Salmon River",
+  "Coquihalla River",
+  "Silverhope Creek",
+  "Chilqua Slough"
+ ],
+ "aliases": [
+  {
+   "name": "Little Campbell River",
+   "like": "%Campbell%",
+   "bbox": [
+    -122.85,
+    48.99,
+    -122.55,
+    49.09
+   ]
+  }
+ ],
+ "roads": {
+  "bbox": [
+   -124.9,
+   49.0,
+   -121.3,
+   50.0
+  ],
+  "named": [
+   "Sunshine Coast Hwy",
+   "Hwy 101",
+   "Squamish Valley Rd",
+   "Government Rd",
+   "Chilliwack Lake Rd",
+   "Morris Valley Rd",
+   "Chehalis FSR",
+   "Dewdney Trunk Rd",
+   "Hayward St",
+   "Wilson Rd",
+   "Hwy 7",
+   "Hwy 1",
+   "Hwy 99",
+   "Hwy 11",
+   "Hwy 9",
+   "Lougheed Hwy",
+   "Trans-Canada Hwy",
+   "Dixon Rd",
+   "Nicomen Island Trunk Rd",
+   "Vedder Rd",
+   "Keith Wilson Rd",
+   "Vedder Mountain Rd",
+   "No 3 Rd",
+   "Sumas Prairie Rd",
+   "Pipeline Rd",
+   "Shaughnessy St",
+   "Coast Meridian Rd",
+   "Victoria Dr",
+   "Cedar Dr",
+   "Lillooet Rd",
+   "Dollarton Hwy",
+   "Mamquam Rd",
+   "Paradise Valley Rd",
+   "Field Rd",
+   "Brooks Rd",
+   "King George Blvd",
+   "Marine Dr",
+   "Stave Lake St",
+   "Alouette Rd",
+   "Fern Cres",
+   "232 St",
+   "240 St",
+   "Crown St",
+   "Hurd St",
+   "Horne St",
+   "Stave Lake Rd",
+   "Oyama St",
+   "Railway Ave",
+   "Riverside St"
+  ]
+ },
+ "bridgeRoads": {
+  "bbox": [
+   -123.0,
+   49.0,
+   -122.2,
+   49.35
+  ],
+  "named": [
+   "216 St",
+   "208 St",
+   "168 St",
+   "12 Ave",
+   "112 Ave",
+   "Stayte Rd",
+   "Alouette Rd",
+   "Lougheed Hwy",
+   "Trans-Canada Hwy",
+   "Dewdney Trunk Rd",
+   "Hayward St",
+   "Stave Lake St",
+   "Kanaka Way",
+   "Marine Dr",
+   "Capilano Rd",
+   "Burke Mountain St"
+  ]
+ },
+ "rail": {
+  "bbox": [
+   -123.3,
+   49.0,
+   -121.3,
+   49.45
+  ]
+ },
+ "secondaryRoads": [
+  "112 Ave",
+  "12 Ave",
+  "168 St",
+  "208 St",
+  "216 St",
+  "232 St",
+  "240 St",
+  "Alouette Rd",
+  "Brooks Rd",
+  "Capilano Rd",
+  "Cedar Dr",
+  "Chehalis FSR",
+  "Chilliwack Lake Rd",
+  "Coast Meridian Rd",
+  "Crown St",
+  "Dewdney Trunk Rd",
+  "Dixon Rd",
+  "Dollarton Hwy",
+  "Fern Cres",
+  "Field Rd",
+  "Government Rd",
+  "Hayward St",
+  "Horne St",
+  "Hurd St",
+  "Kanaka Way",
+  "Keith Wilson Rd",
+  "King George Blvd",
+  "Lillooet Rd",
+  "Lougheed Hwy",
+  "Mamquam Rd",
+  "Marine Dr",
+  "Morris Valley Rd",
+  "Nicomen Island Trunk Rd",
+  "No 3 Rd",
+  "Oyama St",
+  "Paradise Valley Rd",
+  "Pipeline Rd",
+  "Railway Ave",
+  "Riverside St",
+  "Shaughnessy St",
+  "Squamish Valley Rd",
+  "Stave Lake Rd",
+  "Stave Lake St",
+  "Stayte Rd",
+  "Sumas Prairie Rd",
+  "Vedder Mountain Rd",
+  "Vedder Rd",
+  "Victoria Dr",
+  "Wilson Rd"
+ ],
+ "probes": {
+  "crossings": [
+   [
+    "Alouette River",
+    "216 St"
+   ],
+   [
+    "Kanaka Creek",
+    "112 Ave"
+   ],
+   [
+    "Nicomekl River",
+    "208 St"
+   ],
+   [
+    "Serpentine River",
+    "168 St"
+   ],
+   [
+    "Little Campbell River",
+    "12 Ave"
+   ],
+   [
+    "Harrison River",
+    "Lougheed Hwy"
+   ],
+   [
+    "Chapman Creek",
+    "Sunshine Coast Hwy"
+   ],
+   [
+    "Fraser River",
+    "Hwy 11"
+   ],
+   [
+    "Stave River",
+    "Lougheed Hwy"
+   ],
+   [
+    "Sumas River",
+    "Trans-Canada Hwy"
+   ]
+  ],
+  "rail": [
+   "Fraser River",
+   "Stave River"
+  ],
+  "confluences": [
+   [
+    "Chilliwack River",
+    "Slesse Creek"
+   ]
+  ],
+  "points": [
+   [
+    "Chehalis River",
+    -122.0192,
+    49.4428
+   ],
+   [
+    "Capilano River",
+    -123.1105,
+    49.3595
+   ],
+   [
+    "Coquitlam River",
+    -122.7835,
+    49.3555
+   ],
+   [
+    "Stave River",
+    -122.429,
+    49.202
+   ],
+   [
+    "Chapman Creek",
+    -123.7,
+    49.455
+   ],
+   [
+    "Sumas River",
+    -122.114,
+    49.1125
+   ]
+  ]
+ }
+}

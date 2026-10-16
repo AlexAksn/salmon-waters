@@ -1,4 +1,4 @@
-import { SPECIES, WATERS, type Fish, type Rule, type Species, type Water } from '../data/regs';
+import { SPECIES, type Fish, type Rule, type Species, type Water } from '../regions/model';
 
 export type { Fish };
 export type Status = 'open' | 'cr' | 'closed' | 'none' | 'tidal';
@@ -6,12 +6,12 @@ export type SpeciesPick = 'any' | Fish;
 export const FISH: Fish[] = SPECIES.map((s) => s.id);
 export const SPN: Record<Species, string> = { all: 'All species', ...Object.fromEntries(SPECIES.map((s) => [s.id, s.label])) } as Record<Species, string>;
 export const SPECIES_ABBR: Record<Fish, string> = Object.fromEntries(SPECIES.map((s) => [s.id, s.abbr])) as Record<Fish, string>;
-/** "I want" chips: Any plus every species that has at least one rule in the dataset. */
-export function speciesPicksFor(waters: Water[]): { id: SpeciesPick; label: string }[] {
+export interface SpeciesPickOption { id: SpeciesPick; label: string }
+/** "I want" chips: Any plus every species that has at least one rule in the region. */
+export function speciesPicksFor(waters: Water[]): SpeciesPickOption[] {
   const used = new Set(waters.flatMap((w) => w.rules.map((r) => r.sp)));
   return [{ id: 'any', label: 'Any salmon' }, ...SPECIES.filter((s) => used.has(s.id)).map((s) => ({ id: s.id, label: s.label }))];
 }
-export const SPECIES_PICKS = speciesPicksFor(WATERS);
 /** Species with their own rules on this water (drives season-strip rows and the detail list). */
 export const waterFish = (w: Water): Fish[] => FISH.filter((f) => w.rules.some((r) => r.sp === f));
 export const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -22,7 +22,6 @@ export const STATUS_ORDER: Record<Status, number> = { open: 0, cr: 1, closed: 2,
 /** CSS status class for a rule kind (gear rules use the tidal hue). */
 export const KIND_STATUS: Record<Rule['kind'], Status | 'gear'> = { keep: 'open', nr: 'cr', closed: 'closed', gear: 'gear' };
 
-export const WATER_BY_ID: ReadonlyMap<string, Water> = new Map(WATERS.map((w) => [w.id, w]));
 /** Unlisted rivers are drawn thin and kept behind a toggle; tidal and listed waters share the main list. */
 export const isUnlisted = (w: Water) => w.elsewhere?.status === 'none';
 
@@ -101,10 +100,12 @@ export function ruleLine(w: Water, d: Date, sp: SpeciesPick): RuleLine {
 
 // ---- season strip: depends only on (water, species, year), so compute once ----
 export interface Run { st: Status; start: number; n: number }
-const runCache = new Map<string, Run[]>();
+const runCache = new WeakMap<Water, Map<string, Run[]>>();
 export function seasonRuns(w: Water, sp: SpeciesPick, year: number): Run[] {
-  const key = `${w.id}|${sp}|${year}`;
-  let runs = runCache.get(key);
+  let byKey = runCache.get(w);
+  if (!byKey) runCache.set(w, (byKey = new Map()));
+  const key = `${sp}|${year}`;
+  let runs = byKey.get(key);
   if (runs) return runs;
   runs = [];
   let cur: Run | null = null;
@@ -113,7 +114,7 @@ export function seasonRuns(w: Water, sp: SpeciesPick, year: number): Run[] {
     if (cur && cur.st === st) cur.n++;
     else { cur = { st, start: i, n: 1 }; runs.push(cur); }
   }
-  runCache.set(key, runs);
+  byKey.set(key, runs);
   return runs;
 }
 

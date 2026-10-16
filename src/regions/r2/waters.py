@@ -1,18 +1,19 @@
-"""build/stems.pkl -> build/waters.json: one centreline slice per regulated stretch + boundary markers.
+"""Region 2: build/r2/stems.pkl -> build/r2/waters.json, one centreline slice per regulated stretch + boundary markers.
 
 Route measures (metres from the mouth along the FWA blue line) come from `geo.py --boundaries`; approximate ones were
-placed from the DFO prose. Usage: python3 scripts/waters.py
+placed from the DFO prose. Usage: python3 src/regions/r2/waters.py <build_dir>   (scripts/build-geo.sh runs it)
 """
 import json
 import os
 import pickle
 import sys
 
-R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+R = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.insert(0, os.path.join(R, 'scripts'))
+BUILD = sys.argv[1] if len(sys.argv) > 1 else os.path.join(R, 'build', 'r2')
 from geomlib import at_measure, slice_stem  # noqa: E402
 
-ms = pickle.load(open(f'{R}/build/stems.pkl', 'rb'))['mainstem']
+ms = pickle.load(open(f'{BUILD}/stems.pkl', 'rb'))['mainstem']
 sl = lambda name, m0=None, m1=None, tol=0.00006: slice_stem(ms[name], m0, m1, tol)
 END = lambda n: ms[n]['m'][-1]
 
@@ -71,5 +72,5 @@ mk('Coquitlam Dam', 'Coquitlam River', 18347, 'i')
 mk('Cedar Creek / Hyde Creek confluence', 'De Boville Slough', END('De Boville Slough'), approx=True)
 mk('Siddle (Bell’s) Creek confluence', 'Nicomen Slough', END('Nicomen Slough'), approx=True)
 mk('Daisy Lake dam', 'Cheakamus River', 26187, 'i')
-json.dump({'geo': G, 'marks': M}, open(f'{R}/build/waters.json', 'w'), separators=(',', ':'))
-print('waters.json', os.path.getsize(f'{R}/build/waters.json'), 'bytes;', len(G), 'waters,', len(M), 'marks')
+json.dump({'geo': G, 'marks': M}, open(f'{BUILD}/waters.json', 'w'), separators=(',', ':'))
+print('waters.json', os.path.getsize(f'{BUILD}/waters.json'), 'bytes;', len(G), 'waters,', len(M), 'marks')

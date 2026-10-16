@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "data:geo": "python3 scripts/geo.py raw build && python3 scripts/waters.py && cp build/base.json build/waters.json public/data/",
+    "data:raw": "scripts/fetch_raw.sh",
+    "data:geo": "scripts/build-geo.sh",
     "prebuild": "node scripts/check-dfo.mjs && node scripts/fetch-notices.mjs",
     "check:dfo": "node scripts/check-dfo.mjs",
     "check:notices": "node scripts/fetch-notices.mjs"

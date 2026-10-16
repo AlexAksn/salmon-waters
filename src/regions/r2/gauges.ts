@@ -1,6 +1,7 @@
 // Environment and Climate Change Canada real-time hydrometric stations matched to each water.
 // Station list: https://api.weather.gc.ca/collections/hydrometric-stations (status Active, REAL_TIME).
-export interface Gauge { stn: string; name: string; note?: string }
+import type { Gauge } from '../model';
+
 export const GAUGES: Record<string, Gauge> = {
   chilliwack: { stn: '08MH001', name: 'Chilliwack River at Vedder Crossing' },
   capilano: { stn: '08GA031', name: 'Capilano River at Canyon' },
@@ -26,4 +27,3 @@ export const GAUGES: Record<string, Gauge> = {
   'u-elaho': { stn: '08GA071', name: 'Elaho River near the mouth' },
   'u-slesse': { stn: '08MH056', name: 'Slesse Creek near Vedder Crossing' },
 };
-export const wateroffice = (stn: string) => `https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=${stn}`;

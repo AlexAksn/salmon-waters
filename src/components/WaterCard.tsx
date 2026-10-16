@@ -1,4 +1,4 @@
-import type { Water } from '../data/regs';
+import type { Water } from '../regions/model';
 import type { Reading } from '../lib/flow';
 import { ruleLine, SPN, STATUS_LABEL, type SpeciesPick, type Status } from '../lib/rules';
 import { fmtNoticeDate } from '../lib/notices';

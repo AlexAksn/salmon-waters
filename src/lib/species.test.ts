@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Water } from '../data/regs';
+import type { Water } from '../regions/model';
 import { daySummary, ruleLine, seasonRuns, speciesPicksFor, statusOf, upcoming, waterFish } from './rules';
 
 // A hypothetical chum opening added purely as data, the way DFO would publish it.

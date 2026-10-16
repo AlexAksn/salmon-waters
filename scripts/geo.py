@@ -1,8 +1,10 @@
-"""raw/ (BC WFS downloads, see fetch_raw.sh) -> build/base.json (vector basemap) + build/stems.pkl (river mainstems).
+"""raw/<region>/ (BC WFS downloads, see fetch_raw.sh) -> build/<region>/base.json (vector basemap) + stems.pkl (river
+mainstems). Region-specific inputs (bbox, which secondary roads to draw, boundary probes) come from
+src/regions/<region>/geo.json.
 
-Usage: python3 scripts/geo.py <raw_dir> <out_dir> [--boundaries]
---boundaries prints the route measures of bridge/rail/creek crossings used as regulation boundaries; waters.py
-records those numbers by hand (they only change if DFO moves a boundary or the base data is refreshed).
+Usage: python3 scripts/geo.py <region_dir> <raw_dir> <out_dir> [--boundaries]
+--boundaries prints the route measures of bridge/rail/creek crossings used as regulation boundaries; the region's
+waters.py records those numbers by hand (they only change if DFO moves a boundary or the base data is refreshed).
 """
 import collections
 import json
@@ -14,9 +16,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from geomlib import clip_poly, dist_m, dp, lines_of, polys_of, project, ring_area, rnd  # noqa: E402
 
-D, OUT = sys.argv[1], sys.argv[2]
+REGION, D, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 BOUNDARIES = '--boundaries' in sys.argv
-BB = (-125.6, 48.2, -120.6, 50.8)  # minx, miny, maxx, maxy: base-layer clip; must match fetch_raw.sh; shipped as base.json bbox
+CFG = json.load(open(f'{REGION}/geo.json'))
+BB = tuple(CFG['bbox'])  # minx, miny, maxx, maxy: base-layer clip (fetch_raw.sh downloads the same extent); shipped as base.json bbox
+os.makedirs(OUT, exist_ok=True)
 log = lambda *a: print(*a, file=sys.stderr)
 load = lambda n: json.load(open(f'{D}/{n}'))
 in_bb = lambda p: BB[0] <= p[0] <= BB[2] and BB[1] <= p[1] <= BB[3]
@@ -77,8 +81,7 @@ log('river polys', len(river_polys))
 roads = load('roads.json')
 hw = simp_lines(roads['features'], 0.0004, 4, prop=lambda f: (f['properties']['HIGHWAY_ROUTE_NUMBER'] or '', 'f' if f['properties']['ROAD_CLASS'] == 'freeway' else 'h'))
 roads2, br = load('roads2.json'), load('bridges_roads.json')
-SEC = {'Chilliwack Lake Rd', 'Vedder Rd', 'Keith Wilson Rd', 'No 3 Rd', 'Morris Valley Rd', 'Chehalis FSR', 'Squamish Valley Rd', 'Government Rd', 'Paradise Valley Rd', 'Dewdney Trunk Rd', 'Stave Lake St', 'Hayward St', 'Wilson Rd', '232 St', '240 St', 'Dixon Rd', 'Nicomen Island Trunk Rd', 'Capilano Rd', 'Lillooet Rd', 'Marine Dr', 'King George Blvd', 'Coast Meridian Rd', 'Shaughnessy St', 'Pipeline Rd', 'Field Rd', 'Brooks Rd', 'Stave Lake Rd', 'Vedder Mountain Rd', 'Sumas Prairie Rd', 'Mamquam Rd', 'Cedar Dr', 'Victoria Dr', 'Crown St', 'Horne St', 'Railway Ave', 'Riverside St', 'Fern Cres', 'Alouette Rd', 'Dollarton Hwy', 'Hurd St', 'Oyama St',
-       '216 St', '208 St', '168 St', '12 Ave', '112 Ave', 'Stayte Rd', 'Kanaka Way', 'Lougheed Hwy'}
+SEC = set(CFG['secondaryRoads'])
 seen = set(); sec_feats = []
 for f in roads2['features'] + br['features']:
     if f['id'] in seen or f['properties']['ROAD_NAME_FULL'] not in SEC or f['properties']['ROAD_CLASS'] in ('freeway', 'highway'): continue
@@ -140,11 +143,11 @@ if BOUNDARIES:
     allroads = {f['id']: f for f in br['features'] + roads2['features'] + roads['features']}.values()
     byname = collections.defaultdict(list)
     for f in allroads: byname[f['properties']['ROAD_NAME_FULL']].append(f)
-    for stem, road in [('Alouette River', '216 St'), ('Kanaka Creek', '112 Ave'), ('Nicomekl River', '208 St'), ('Serpentine River', '168 St'), ('Little Campbell River', '12 Ave'),
-                       ('Harrison River', 'Lougheed Hwy'), ('Chapman Creek', 'Sunshine Coast Hwy'), ('Fraser River', 'Hwy 11'), ('Stave River', 'Lougheed Hwy'), ('Sumas River', 'Trans-Canada Hwy')]:
+    for stem, road in CFG['probes']['crossings']:
         print('X', stem, 'x', road, crossings(stem, byname.get(road, [])))
-    for stem in ('Fraser River', 'Stave River'): print('X', stem, 'x rail', crossings(stem, rail_feats))
-    for stem, trib in [('Chilliwack River', 'Slesse Creek')]:
+    for stem in CFG['probes']['rail']: print('X', stem, 'x rail', crossings(stem, rail_feats))
+    for stem, trib in CFG['probes']['confluences']:
         m, _, d = project(mainstem[stem], mainstem[trib]['pts'][0]); print('CONFLUENCE', trib, 'on', stem, 'm', round(m), 'd', round(d))
-    for name, p in [('Chehalis River', (-122.0192, 49.4428)), ('Capilano River', (-123.1105, 49.3595)), ('Coquitlam River', (-122.7835, 49.3555)), ('Stave River', (-122.4290, 49.2020)), ('Chapman Creek', (-123.70, 49.455)), ('Sumas River', (-122.114, 49.1125))]:
+    for name, lon, lat in CFG['probes']['points']:
+        p = (lon, lat)
         m, q, d = project(mainstem[name], p); print('PT', name, 'm', round(m), 'd', round(d), 'ends', round(mainstem[name]['m'][0]), round(mainstem[name]['m'][-1]))

@@ -1,11 +1,11 @@
 import L from 'leaflet';
-import type { City, Water } from '../data/regs';
+import type { City, Water } from '../regions/model';
 import type { Basemap } from './basemaps';
 import { toLatLon, type BaseData, type Coord, type WatersGeo } from './geo';
 import { isUnlisted, type Status } from './rules';
 
 interface WaterLayers { lines: L.Path[]; hit: L.Path[]; thin: boolean; isLake: boolean }
-interface Opts { onSelect: (id: string) => void; tooltip: (id: string) => string }
+interface Opts { home: L.LatLngBoundsLiteral; onSelect: (id: string) => void; tooltip: (id: string) => string }
 
 const ll = (c: Coord): L.LatLngExpression => toLatLon(c);
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -114,7 +114,7 @@ export class SalmonMap {
     [this.g.un, this.g.halo, this.g.reg, this.g.hit].forEach((x) => x.addTo(this.map));
     this.map.on('zoomend', () => this.restyleZoom());
     this.fitMinZoom();
-    this.map.fitBounds([[49.0, -123.35], [49.75, -121.6]], { padding: [10, 10] });
+    this.map.fitBounds(opts.home, { padding: [10, 10] });
     this.setBasemap('chart');
     this.themeMq.addEventListener?.('change', this.onTheme);
   }

@@ -1,9 +1,9 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
-import { CITIES, WATERS } from '../data/regs';
 import { BASEMAPS, type Basemap } from '../lib/basemaps';
 import type { BaseData, WatersGeo } from '../lib/geo';
 import { SalmonMap } from '../lib/map';
-import { fmtDate, sameDay, STATUS_LABEL, WATER_BY_ID, type Status } from '../lib/rules';
+import { useRegion } from '../lib/region';
+import { fmtDate, sameDay, STATUS_LABEL, type Status } from '../lib/rules';
 
 interface Props {
   data: { base: BaseData; wg: WatersGeo }; status: Record<string, Status>; filter: Status | null; sel: string | null; base: Basemap; date: Date;
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export default function MapView({ data, status, filter, sel, base, date, mapRef, onSelect, onBase, onLocate }: Props) {
+  const region = useRegion();
   const el = useRef<HTMLDivElement>(null);
   const live = useRef({ status, onSelect });
   live.current = { status, onSelect };
@@ -18,9 +19,10 @@ export default function MapView({ data, status, filter, sel, base, date, mapRef,
 
   useEffect(() => {
     if (!el.current) return;
-    const m = new SalmonMap(el.current, data.base, data.wg, WATERS, CITIES, {
+    const m = new SalmonMap(el.current, data.base, data.wg, region.waters, region.cities, {
+      home: region.home,
       onSelect: (id) => live.current.onSelect(id),
-      tooltip: (id) => { const w = WATER_BY_ID.get(id)!; return `${w.name}${w.sub ? ` · ${w.sub}` : ''}<br><span style="opacity:.8">${STATUS_LABEL[live.current.status[id]]}</span>`; },
+      tooltip: (id) => { const w = region.byId.get(id)!; return `${w.name}${w.sub ? ` · ${w.sub}` : ''}<br><span style="opacity:.8">${STATUS_LABEL[live.current.status[id]]}</span>`; },
     });
     mapRef.current = m;
     if (import.meta.env.DEV) (window as unknown as { __salmonMap?: SalmonMap }).__salmonMap = m; // for UI tests only
@@ -28,7 +30,7 @@ export default function MapView({ data, status, filter, sel, base, date, mapRef,
     const ro = new ResizeObserver(() => m.invalidate());
     ro.observe(el.current);
     return () => { ro.disconnect(); m.destroy(); mapRef.current = null; };
-  }, [data, mapRef]);
+  }, [data, region, mapRef]);
   useEffect(() => { mapRef.current?.paint(status, filter, sel); }, [status, filter, sel, mapRef]);
   useEffect(() => { mapRef.current?.setBasemap(base); }, [base, mapRef]);
 

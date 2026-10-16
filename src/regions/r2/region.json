@@ -1,0 +1,26 @@
+{
+  "id": "r2",
+  "num": 2,
+  "name": "Lower Mainland",
+  "dfo": {
+    "url": "https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html",
+    "date": "2026-09-16",
+    "tableHash": "43cf1b37dcef4d5a"
+  },
+  "home": [[49.0, -123.35], [49.75, -121.6]],
+  "notices": {
+    "region": "region 2|lower mainland|lower fraser",
+    "waters": {
+      "chilliwack": "chilliwack|vedder|sumas", "capilano": "capilano", "coquitlam": "coquitlam",
+      "alouette-upper": "\\balouette", "alouette-lower": "\\balouette", "north-alouette": "north alouette",
+      "ashlu": "ashlu", "cheakamus": "cheakamus", "mamquam": "mamquam", "squamish": "squamish",
+      "chapman": "chapman creek", "chehalis": "chehalis", "deboville": "de ?boville",
+      "fraser-upper": "fraser", "fraser-tidal": "fraser", "harrison-upper": "harrison", "harrison-lower": "harrison",
+      "kanaka": "kanaka", "khartoum": "khartoum", "lois": "lois lake", "lcr": "little campbell", "lcr-mouth": "little campbell",
+      "nicomekl": "nicomekl", "nicomen": "nicomen|dewdney", "norrish": "norrish|suicide creek", "serpentine": "serpentine", "stave": "stave",
+      "u-pitt": "pitt river", "u-seymour": "seymour", "u-lillooet": "lillooet", "u-coquihalla": "coquihalla", "u-salmon": "salmon river",
+      "u-elaho": "elaho", "u-lynn": "lynn creek", "u-indian": "indian river", "u-brunette": "brunette", "u-silverhope": "silverhope",
+      "u-lois": "lois river", "u-powell": "powell river"
+    }
+  }
+}

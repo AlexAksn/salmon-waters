@@ -1,4 +1,4 @@
-import { addDays, fmtDate, isoLocal, isUnlisted, parseIso, WATER_BY_ID } from './rules';
+import { addDays, fmtDate, isoLocal, parseIso } from './rules';
 
 /** One DFO fishery notice, as produced by scripts/fetch-notices.mjs. */
 export interface Notice { fn: string; docId: string; subject: string; date: string; sent: string; url: string; region: boolean; waters: string[] }
@@ -11,4 +11,3 @@ export const noticesFor = (ns: Notice[], id: string) => ns.filter((n) => n.water
 /** Region-wide notices that name no specific water. */
 export const regionNotices = (ns: Notice[]) => ns.filter((n) => n.region && n.waters.length === 0);
 export const fmtNoticeDate = (d: string) => { const p = parseIso(d); return p ? fmtDate(p) : d; };
-export const isUnlistedId = (id: string) => { const w = WATER_BY_ID.get(id); return !!w && isUnlisted(w); };

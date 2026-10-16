@@ -1,32 +1,10 @@
 // Source: DFO "Region 2 - Lower Mainland: Recreational salmon fishing limits, openings and closures"
-// (url, page date and table hash live in ./source.json; scripts/check-dfo.mjs compares against it at build).
+// (url, page date and table hash live in ./region.json; scripts/check-dfo.mjs compares against it at build).
 // Edit this file when DFO updates the page.  kind: keep = retention allowed | nr = non-retention
 // (catch & release) | closed = no fishing for salmon | gear = gear rule.  from/to = "MM-DD" inclusive;
 // to:null = until further notice.
-import source from './source.json';
+import type { City, Elsewhere, Rule, Water } from '../model';
 
-/** Salmon species the rules can name. Add here and everything (chips, strips, status, changing-soon) follows. */
-export const SPECIES = [
-  { id: 'chinook', label: 'Chinook', abbr: 'CH' },
-  { id: 'coho', label: 'Coho', abbr: 'CO' },
-  { id: 'chum', label: 'Chum', abbr: 'CM' },
-  { id: 'pink', label: 'Pink', abbr: 'PK' },
-  { id: 'sockeye', label: 'Sockeye', abbr: 'SK' },
-] as const;
-export type Fish = (typeof SPECIES)[number]['id'];
-export type Species = Fish | 'all';
-export type RuleKind = 'keep' | 'nr' | 'closed' | 'gear';
-export interface Rule { sp: Species; kind: RuleKind; from: string; to: string | null; limit?: string; notice?: string }
-/** A water whose salmon rules are not on this page: tidal (Area 29) or simply not listed. */
-export interface Elsewhere { status: 'tidal' | 'none'; short: string; text: string; link?: string }
-export interface Water {
-  id: string; name: string; sub?: string; group?: string; area?: string; notes?: string[];
-  rules: Rule[]; lake?: string; elsewhere?: Elsewhere;
-}
-export type City = [name: string, lon: number, lat: number, rank: 1 | 2 | 3];
-
-export const SOURCE_URL: string = source.url;
-export const SOURCE_DATE: string = source.date;
 export const NOTICES: Record<string, string> = {
   FN0960: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366086&ID=all',
   FN0961: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366093&ID=all',

@@ -94,3 +94,5 @@ export function vsTypical(q: number, typ: Typical): { ratio: number; cls: Normal
   return { ratio, cls: ratio < 0.6 ? 'low' : ratio > 1.6 ? 'high' : 'normal' };
 }
 export function ageMinutes(r: Reading) { return Math.round((Date.now() - r.t) / 60_000); }
+
+export const wateroffice = (stn: string) => `https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=${stn}`;
