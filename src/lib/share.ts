@@ -22,7 +22,6 @@ export function cardLines(w: Water, date: Date, sp: SpeciesPick): string[] {
   return [...out, ...rl.gear.map((g) => `Gear: ${g}`)];
 }
 export const shareTitle = ({ w, date, status }: ShareInput) => `${w.name} · ${STATUS_LABEL[status]} · ${fmtDate(date)}`;
-export const shareText = (s: ShareInput) => [shareTitle(s), ...cardLines(s.w, s.date, s.sp), 'Not official · check DFO before you go', s.url].join('\n');
 
 /** Word-wrap `text` to `max` px in the current font; at most `lines` lines, the last one ellipsised. */
 function wrap(ctx: CanvasRenderingContext2D, text: string, max: number, lines: number): string[] {
@@ -108,20 +107,28 @@ export async function drawCard(s: ShareInput): Promise<HTMLCanvasElement> {
 const toBlob = (cv: HTMLCanvasElement) => new Promise<Blob>((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('toBlob'))), 'image/png'));
 const fileName = (s: ShareInput) => `salmon-waters-${s.w.id}-${s.date.getFullYear()}${String(s.date.getMonth() + 1).padStart(2, '0')}${String(s.date.getDate()).padStart(2, '0')}.png`;
 
-export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'failed';
+export type ShareMode = 'link' | 'card';
+export type ShareResult = 'shared' | 'copied' | 'saved' | 'cancelled' | 'failed';
 /** Share sheet with image + text + link where supported; otherwise copy the link and save the image. */
-export async function shareWater(s: ShareInput): Promise<ShareResult> {
-  const text = shareText(s), title = shareTitle(s);
-  let file: File | null = null;
-  try { file = new File([await toBlob(await drawCard(s))], fileName(s), { type: 'image/png' }); } catch { file = null; }
+async function sheet(data: ShareData): Promise<ShareResult | null> {
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-  if (typeof nav.share === 'function') {
-    // With files attached some targets drop `url`, so it is already in `text`.
-    const data: ShareData = file && nav.canShare?.({ files: [file] }) ? { title, text, files: [file] } : { title, text: `${title}\n${s.url}`, url: s.url };
-    try { await nav.share(data); return 'shared'; } catch (e) { if ((e as Error).name === 'AbortError') return 'cancelled'; }
+  if (typeof nav.share !== 'function' || (data.files && nav.canShare && !nav.canShare(data))) return null;
+  try { await nav.share(data); return 'shared'; } catch (e) { return (e as Error).name === 'AbortError' ? 'cancelled' : null; }
+}
+/** 'link': the URL (and title) — Facebook and friends make a link post with the site card. 'card': the PNG alone — a photo post
+ *  of the river card. Facebook ignores an image whenever a URL is in the payload, so the two are not combined. Without a share
+ *  sheet, 'link' copies the URL and 'card' downloads the image. */
+export async function shareWater(s: ShareInput, mode: ShareMode): Promise<ShareResult> {
+  const title = shareTitle(s);
+  if (mode === 'link') {
+    const r = await sheet({ title, text: `${title}\n${s.url}`, url: s.url });
+    if (r) return r;
+    try { await navigator.clipboard.writeText(s.url); return 'copied'; } catch { return 'failed'; }
   }
-  let copied = false;
-  try { await navigator.clipboard.writeText(s.url); copied = true; } catch { copied = false; }
-  if (file) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10_000); }
-  return copied ? 'copied' : 'failed';
+  let file: File;
+  try { file = new File([await toBlob(await drawCard(s))], fileName(s), { type: 'image/png' }); } catch { return 'failed'; }
+  const r = await sheet({ title, files: [file] });
+  if (r) return r;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+  return 'saved';
 }

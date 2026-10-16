@@ -3,14 +3,14 @@ import type { Water } from '../regions/model';
 import { useRegion } from '../lib/region';
 import type { WatersGeo } from '../lib/geo';
 import { active, dayFish, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type SpeciesPick, type Status } from '../lib/rules';
-import { shareWater, type ShareResult } from '../lib/share';
+import { shareWater, type ShareMode } from '../lib/share';
 import FlowPanel from './FlowPanel';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
 import Star from './Star';
 
 interface Props { w: Water; date: Date; sp: SpeciesPick; status: Status; wg: WatersGeo; notices: Notice[]; fav: boolean; onFav: () => void; onBack: () => void; onZoom: () => void }
-const SHARE_LABEL: Record<ShareResult | 'idle' | 'busy', string> = { idle: 'Share', busy: 'Preparing…', shared: 'Shared', cancelled: 'Share', copied: 'Link copied · image saved', failed: 'Could not share' };
+
 
 function nearMarks(w: Water, wg: WatersGeo) {
   const segs = wg.geo[w.id]; if (!segs?.length) return [];
@@ -22,10 +22,6 @@ function nearMarks(w: Water, wg: WatersGeo) {
 export default function WaterDetail({ w, date, sp, status, wg, notices, fav, onFav, onBack, onZoom }: Props) {
   const region = useRegion();
   const day = w.elsewhere ? null : daySummary(w, date);
-  const [shareState, setShareState] = useState<keyof typeof SHARE_LABEL>('idle');
-  useEffect(() => { if (shareState === 'idle' || shareState === 'busy') return; const t = setTimeout(() => setShareState('idle'), 3000); return () => clearTimeout(t); }, [shareState]);
-  useEffect(() => setShareState('idle'), [w.id]);
-  const share = async () => { setShareState('busy'); setShareState(await shareWater({ w, date, sp, status, region, url: location.href })); };
   const marks = nearMarks(w, wg);
   const notice = (id?: string) => (id ? <> <a href={region.notices[id]} target="_blank" rel="noopener">{id}</a></> : null);
   // One "catch and release for all salmon" rule and nothing to keep: say it once instead of five times.
@@ -93,9 +89,20 @@ export default function WaterDetail({ w, date, sp, status, wg, notices, fav, onF
       )}
       <div className="actions">
         <button className="btn primary" onClick={onZoom}>Zoom to this water</button>
-        <button className="btn" onClick={share} disabled={shareState === 'busy'} aria-live="polite">{SHARE_LABEL[shareState]}</button>
+        <ShareButton mode="link" idle="Share link" share={() => shareWater({ w, date, sp, status, region, url: location.href }, 'link')} />
+        <ShareButton mode="card" idle="Share card" share={() => shareWater({ w, date, sp, status, region, url: location.href }, 'card')} />
         <a className="btn" href={region.dfo.url} target="_blank" rel="noopener">DFO source page</a>
       </div>
     </div>
   );
+}
+
+const DONE: Record<Awaited<ReturnType<typeof shareWater>>, string> = { shared: 'Shared', copied: 'Link copied', saved: 'Image saved', cancelled: '', failed: 'Could not share' };
+/** One share action with its own "done" label for a few seconds. */
+function ShareButton({ mode, idle, share }: { mode: ShareMode; idle: string; share: () => ReturnType<typeof shareWater> }) {
+  const [label, setLabel] = useState(idle);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (label === idle) return; const t = setTimeout(() => setLabel(idle), 3000); return () => clearTimeout(t); }, [label, idle]);
+  const go = async () => { setBusy(true); try { const r = await share(); setLabel(DONE[r] || idle); } finally { setBusy(false); } };
+  return <button className="btn" data-share={mode} onClick={go} disabled={busy} aria-live="polite">{busy && mode === 'card' ? 'Preparing…' : label}</button>;
 }

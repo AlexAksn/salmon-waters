@@ -3,7 +3,7 @@ import { WATERS } from '../regions/r2/regs';
 import region from '../regions/r2/region.json';
 import { toMeta, type RegionJson } from '../regions/model';
 import { statusOf } from './rules';
-import { cardLines, shareText, shareTitle, type ShareInput } from './share';
+import { cardLines, shareTitle, type ShareInput } from './share';
 
 const W = (id: string) => WATERS.find((w) => w.id === id)!;
 const meta = toMeta(region as RegionJson);
@@ -22,12 +22,7 @@ describe('share card text', () => {
     expect(cardLines(W('kanaka'), new Date(2026, 9, 14), 'any')).toEqual(['No salmon opportunity listed today']);
     expect(cardLines(W('kanaka'), new Date(2026, 9, 14), 'coho')).toEqual(['Coho: closed']);
   });
-  it('title and text carry name, status, date and link', () => {
-    const s = input('chilliwack', new Date(2026, 9, 14));
-    expect(shareTitle(s)).toBe('Chilliwack / Vedder River · Open · Oct 14');
-    const t = shareText(s).split('\n');
-    expect(t[0]).toBe(shareTitle(s));
-    expect(t.at(-1)).toBe(s.url);
-    expect(t.at(-2)).toMatch(/Not official/);
+  it('title carries name, status and date', () => {
+    expect(shareTitle(input('chilliwack', new Date(2026, 9, 14)))).toBe('Chilliwack / Vedder River · Open · Oct 14');
   });
 });
