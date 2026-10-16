@@ -21,7 +21,7 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Cloudflare Web Analytics: page views only, no cookies, no individual tracking -->
-    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "074beb756a7a417d9e9eddebd5a8f626"}'></script>
+    <!-- Cloudflare Web Analytics: real page loads only (spa:false, in-app URL changes are not views), no cookies -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "074beb756a7a417d9e9eddebd5a8f626", "spa": false}'></script>
   </body>
 </html>
