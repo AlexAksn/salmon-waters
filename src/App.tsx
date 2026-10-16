@@ -85,7 +85,7 @@ export default function App() {
   // "Nearest to <city>" carried over from another region: fall back to this region's main city.
   useEffect(() => { if (region && near !== 'me' && !region.cities.some((c) => c[0] === near)) setNear(region.cities[0][0]); }, [region, near]);
   // Changing region is navigation: a new history entry (which the URL effect then fills in), so Back returns here.
-  const switchRegion = (id: string | null) => { if (id === regionId) return; history.pushState(null, '', location.href); setSel(null); setFilter(null); setQ(''); setRegionId(id); };
+  const switchRegion = (id: string | null, water: string | null = null) => { if (id === regionId) return; history.pushState(null, '', location.href); setSel(water); setFilter(null); setQ(''); setRegionId(id); };
   const picks = useMemo(() => speciesPicksFor(waters), [waters]);
   // A species from the URL that this region has no rules for falls back to Any.
   useEffect(() => { if (region && !picks.some((p) => p.id === sp)) setSp('any'); }, [region, picks, sp]);

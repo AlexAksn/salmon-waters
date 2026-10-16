@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
-import { BC_REGIONS, isMapped, REGIONS, type RegionEntry, type RegionStub } from '../regions';
+import { useEffect, useMemo, useState } from 'react';
+import { BC_REGIONS, isMapped, regionEntry, REGIONS, type RegionEntry, type RegionStub } from '../regions';
+import type { RegionData } from '../regions/model';
 import { getPosition } from '../lib/geo';
-import { countStatuses, fmtDate, sameDay, statusOf, SUMMARY, type Counts } from '../lib/rules';
+import { splitFav, toggleFav, useFavs } from '../lib/favs';
+import { countStatuses, fmtDate, sameDay, STATUS_LABEL, statusOf, SUMMARY, type Counts } from '../lib/rules';
+import { RuleText } from './WaterCard';
+import Star from './Star';
 
 /** public/data/bc-regions.json: one outline per DFO region (scripts/bc-regions.py), lon/lat rings. */
 interface Outlines { regions: { num: number; rings: [number, number][][] }[] }
-interface Props { date: Date; onPick: (id: string) => void }
+interface Props { date: Date; onPick: (id: string, water?: string) => void }
 
 // Plate carrée scaled by cos(54.5°): plenty for a province-sized thumbnail. Units: 1/100 of a degree.
 const LON0 = -139.2, LAT1 = 60.1, KX = Math.cos((54.5 * Math.PI) / 180) * 100, KY = 100;
@@ -27,15 +31,22 @@ const loadOutlines = () => (outlinesP ??= fetch(`${import.meta.env.BASE_URL}data
 
 export default function Overview({ date, onPick }: Props) {
   const [outlines, setOutlines] = useState<Outlines | null>(null);
-  const [counts, setCounts] = useState<Record<string, Counts>>({});
+  const [loaded, setLoaded] = useState<Record<string, RegionData>>({});
   const [here, setHere] = useState<number | 'outside' | null>(null);
   const [locating, setLocating] = useState(false);
+  const favs = useFavs();
   useEffect(() => { let live = true; loadOutlines().then((o) => { if (live) setOutlines(o); }).catch(() => { /* map stays blank; the list still works */ }); return () => { live = false; }; }, []);
+  // Every mapped region's rules (small modules) for the counts and the starred rivers.
   useEffect(() => {
     let live = true;
-    REGIONS.forEach((e) => e.load().then((d) => { if (live) setCounts((prev) => ({ ...prev, [e.id]: countStatuses(d.waters, (w) => statusOf(w, date, 'any')) })); }));
+    REGIONS.forEach((e) => e.load().then((d) => { if (live) setLoaded((prev) => ({ ...prev, [e.id]: d })); }));
     return () => { live = false; };
-  }, [date]);
+  }, []);
+  const counts = useMemo(() => Object.fromEntries(Object.entries(loaded).map(([id, d]) => [id, countStatuses(d.waters, (w) => statusOf(w, date, 'any'))])) as Record<string, Counts>, [loaded, date]);
+  const mine = favs.flatMap((key) => {
+    const [rid, wid] = splitFav(key), r = regionEntry(rid), w = loaded[rid]?.byId.get(wid);
+    return r && w ? [{ key, r, w, status: statusOf(w, date, 'any') }] : [];
+  });
   const locate = () => {
     if (!outlines) return;
     setLocating(true);
@@ -69,7 +80,27 @@ export default function Overview({ date, onPick }: Props) {
         <p className="tag">Pick a region. Two are mapped river by river; the rest show what DFO publishes and are next in line.</p>
       </header>
       <div className="ov-body">
-        {cards(BC_REGIONS.filter(isMapped), 'mapped')}
+        <div className="ov-side">
+          {favs.length > 0 && (
+            <div>
+              <div className="sect-t">My rivers · {when}</div>
+              <ul className="list">
+                {mine.map(({ key, r, w, status }) => (
+                  <li key={key} className={`card ${status}`} role="button" tabIndex={0} aria-label={w.name} onClick={() => onPick(r.id, w.id)} onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onPick(r.id, w.id); } }}>
+                    <div className="h">
+                      <div><div className="nm">{w.name}</div><div className="sb">{w.sub ? `${w.sub} · ` : ''}{r.name}</div></div>
+                      <div className="right"><span className={`pill ${status}`}>{STATUS_LABEL[status]}</span></div>
+                      <Star on onToggle={() => toggleFav(key)} />
+                    </div>
+                    <RuleText w={w} date={date} sp="any" />
+                  </li>
+                ))}
+                {mine.length < favs.length && <li className="muted small">Loading…</li>}
+              </ul>
+            </div>
+          )}
+          {cards(BC_REGIONS.filter(isMapped), 'mapped')}
+        </div>
         <div className="ov-map">
           <svg viewBox={VIEWBOX} role="img" aria-label="Map of BC fishing regions">
             {outlines && BC_REGIONS.map((r) => {

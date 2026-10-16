@@ -8,6 +8,7 @@ import { countStatuses, isUnlisted, STATUS_ORDER, SUMMARY, type SpeciesPick, typ
 import ChangingSoon from './ChangingSoon';
 import Notices from './Notices';
 import { noticesFor, regionNotices, type Notice } from '../lib/notices';
+import { favKey, toggleFav, useFavs } from '../lib/favs';
 import WaterCard from './WaterCard';
 import WaterDetail from './WaterDetail';
 
@@ -30,14 +31,17 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
   const counts = countStatuses(region.waters, (w) => p.status[w.id]);
   const q = p.q.trim().toLowerCase();
   const matches = (w: { name: string; sub?: string; group?: string }) => !q || `${w.name} ${w.sub || ''} ${w.group || ''}`.toLowerCase().includes(q);
-  let ws = LISTED.filter(matches);
-  if (p.filter) ws = ws.filter((w) => p.status[w.id] === p.filter);
-  if (p.sort === 'near') ws.sort((a, b) => ((p.dist[a.id] ?? 1e9) - (p.dist[b.id] ?? 1e9)) || byName(a, b));
-  else if (p.sort === 'status') ws.sort((a, b) => STATUS_ORDER[p.status[a.id]] - STATUS_ORDER[p.status[b.id]] || byName(a, b));
-  else ws.sort(byName);
+  const favs = useFavs();
+  const isFav = (w: Water) => favs.includes(favKey(region.id, w.id));
+  const shown = (w: Water) => matches(w) && (!p.filter || p.status[w.id] === p.filter);
+  const cmp = p.sort === 'near' ? (a: Water, b: Water) => ((p.dist[a.id] ?? 1e9) - (p.dist[b.id] ?? 1e9)) || byName(a, b)
+    : p.sort === 'status' ? (a: Water, b: Water) => STATUS_ORDER[p.status[a.id]] - STATUS_ORDER[p.status[b.id]] || byName(a, b) : byName;
+  // Starred waters (listed or not) sit in their own group on top; the main list holds the rest.
+  const mine = region.waters.filter((w) => isFav(w) && shown(w)).sort(cmp);
+  const ws = LISTED.filter((w) => !isFav(w) && shown(w)).sort(cmp);
   const selW = p.sel ? region.byId.get(p.sel) : undefined;
   const card = (w: Water) => (
-    <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={region.gauges[w.id] ? p.flows[region.gauges[w.id].stn] : undefined} noticeDate={noticesFor(p.notices, w.id)[0]?.date} onSelect={() => p.onSelect(w.id)} />
+    <WaterCard key={w.id} w={w} date={p.date} sp={p.sp} status={p.status[w.id]} selected={p.sel === w.id} fav={isFav(w)} dist={p.sort === 'near' ? p.dist[w.id] : undefined} flow={region.gauges[w.id] ? p.flows[region.gauges[w.id].stn] : undefined} noticeDate={noticesFor(p.notices, w.id)[0]?.date} onSelect={() => p.onSelect(w.id)} onFav={() => toggleFav(favKey(region.id, w.id))} />
   );
 
   return (
@@ -52,7 +56,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
       <div className="legend-m" aria-hidden="true">{LEGEND.map(([k, l]) => <span key={k} className={k}><i />{l}</span>)}</div>
       <div className="scroll" ref={scrollRef}>
         {selW ? (
-          <WaterDetail w={selW} date={p.date} sp={p.sp} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
+          <WaterDetail w={selW} date={p.date} sp={p.sp} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} fav={isFav(selW)} onFav={() => toggleFav(favKey(region.id, selW.id))} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
         ) : (
           <>
             <div className={`tools${p.sort === 'near' ? ' near' : ''}`}>
@@ -69,14 +73,16 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
                 </select>
               )}
             </div>
+            {mine.length > 0 && <><div className="sect-t">My rivers</div><ul className="list">{mine.map(card)}</ul></>}
             <Notices notices={p.notices} fetchedAt={p.noticesFetchedAt} onSelect={p.onSelect} />
             <ChangingSoon date={p.date} onSelect={p.onSelect} />
+            {mine.length > 0 && <div className="sect-t">All waters</div>}
             <ul className="list">
-              {ws.length === 0 && <li className="muted" style={{ padding: '8px 2px' }}>Nothing matches.</li>}
+              {ws.length === 0 && mine.length === 0 && <li className="muted" style={{ padding: '8px 2px' }}>Nothing matches.</li>}
               {ws.map(card)}
             </ul>
             <label className="toggle-un"><input type="checkbox" checked={p.showUn} onChange={(e) => p.onShowUn(e.target.checked)} /> Show rivers with no salmon opportunity</label>
-            {p.showUn && <ul className="list">{UNLISTED.filter(matches).map(card)}</ul>}
+            {p.showUn && <ul className="list">{UNLISTED.filter((w) => !isFav(w) && matches(w)).map(card)}</ul>}
             <details className="global">
               <summary>Rules that apply everywhere in Region {region.num}</summary>
               <ul>{region.globalRules.map((r) => <li key={r}>{r}</li>)}</ul>

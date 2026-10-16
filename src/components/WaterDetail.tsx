@@ -7,8 +7,9 @@ import { shareWater, type ShareResult } from '../lib/share';
 import FlowPanel from './FlowPanel';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
+import Star from './Star';
 
-interface Props { w: Water; date: Date; sp: SpeciesPick; status: Status; wg: WatersGeo; notices: Notice[]; onBack: () => void; onZoom: () => void }
+interface Props { w: Water; date: Date; sp: SpeciesPick; status: Status; wg: WatersGeo; notices: Notice[]; fav: boolean; onFav: () => void; onBack: () => void; onZoom: () => void }
 const SHARE_LABEL: Record<ShareResult | 'idle' | 'busy', string> = { idle: 'Share', busy: 'Preparing…', shared: 'Shared', cancelled: 'Share', copied: 'Link copied · image saved', failed: 'Could not share' };
 
 function nearMarks(w: Water, wg: WatersGeo) {
@@ -18,7 +19,7 @@ function nearMarks(w: Water, wg: WatersGeo) {
   const px = (maxx - minx) * 0.02 + 0.002, py = (maxy - miny) * 0.02 + 0.002;
   return wg.marks.filter((m) => m.k !== 'i' && m.c[0] >= minx - px && m.c[0] <= maxx + px && m.c[1] >= miny - py && m.c[1] <= maxy + py);
 }
-export default function WaterDetail({ w, date, sp, status, wg, notices, onBack, onZoom }: Props) {
+export default function WaterDetail({ w, date, sp, status, wg, notices, fav, onFav, onBack, onZoom }: Props) {
   const region = useRegion();
   const day = w.elsewhere ? null : daySummary(w, date);
   const [shareState, setShareState] = useState<keyof typeof SHARE_LABEL>('idle');
@@ -32,7 +33,7 @@ export default function WaterDetail({ w, date, sp, status, wg, notices, onBack, 
   return (
     <div className="detail">
       <button className="back" onClick={onBack}>‹ All waters</button>
-      <div><h2>{w.name}</h2>{w.sub && <div className="sub">{w.sub}</div>}</div>
+      <div className="h2row"><div><h2>{w.name}</h2>{w.sub && <div className="sub">{w.sub}</div>}</div><Star on={fav} onToggle={onFav} big /></div>
       <div className={`status-box ${status}`}>
         <div className="big">{STATUS_LABEL[status]} · {fmtDate(date)}{sameDay(date, new Date()) && ' (today)'}</div>
         {w.elsewhere ? (
