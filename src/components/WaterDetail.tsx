@@ -1,12 +1,15 @@
+import { useEffect, useState } from 'react';
 import type { Water } from '../regions/model';
 import { useRegion } from '../lib/region';
 import type { WatersGeo } from '../lib/geo';
-import { active, dayFish, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type Status } from '../lib/rules';
+import { active, dayFish, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type SpeciesPick, type Status } from '../lib/rules';
+import { shareWater, type ShareResult } from '../lib/share';
 import FlowPanel from './FlowPanel';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
 
-interface Props { w: Water; date: Date; status: Status; wg: WatersGeo; notices: Notice[]; onBack: () => void; onZoom: () => void }
+interface Props { w: Water; date: Date; sp: SpeciesPick; status: Status; wg: WatersGeo; notices: Notice[]; onBack: () => void; onZoom: () => void }
+const SHARE_LABEL: Record<ShareResult | 'idle' | 'busy', string> = { idle: 'Share', busy: 'Preparing…', shared: 'Shared', cancelled: 'Share', copied: 'Link copied · image saved', failed: 'Could not share' };
 
 function nearMarks(w: Water, wg: WatersGeo) {
   const segs = wg.geo[w.id]; if (!segs?.length) return [];
@@ -15,9 +18,13 @@ function nearMarks(w: Water, wg: WatersGeo) {
   const px = (maxx - minx) * 0.02 + 0.002, py = (maxy - miny) * 0.02 + 0.002;
   return wg.marks.filter((m) => m.k !== 'i' && m.c[0] >= minx - px && m.c[0] <= maxx + px && m.c[1] >= miny - py && m.c[1] <= maxy + py);
 }
-export default function WaterDetail({ w, date, status, wg, notices, onBack, onZoom }: Props) {
+export default function WaterDetail({ w, date, sp, status, wg, notices, onBack, onZoom }: Props) {
   const region = useRegion();
   const day = w.elsewhere ? null : daySummary(w, date);
+  const [shareState, setShareState] = useState<keyof typeof SHARE_LABEL>('idle');
+  useEffect(() => { if (shareState === 'idle' || shareState === 'busy') return; const t = setTimeout(() => setShareState('idle'), 3000); return () => clearTimeout(t); }, [shareState]);
+  useEffect(() => setShareState('idle'), [w.id]);
+  const share = async () => { setShareState('busy'); setShareState(await shareWater({ w, date, sp, status, region, url: location.href })); };
   const marks = nearMarks(w, wg);
   const notice = (id?: string) => (id ? <> <a href={region.notices[id]} target="_blank" rel="noopener">{id}</a></> : null);
   // One "catch and release for all salmon" rule and nothing to keep: say it once instead of five times.
@@ -85,6 +92,7 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
       )}
       <div className="actions">
         <button className="btn primary" onClick={onZoom}>Zoom to this water</button>
+        <button className="btn" onClick={share} disabled={shareState === 'busy'} aria-live="polite">{SHARE_LABEL[shareState]}</button>
         <a className="btn" href={region.dfo.url} target="_blank" rel="noopener">DFO source page</a>
       </div>
     </div>

@@ -52,7 +52,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
       <div className="legend-m" aria-hidden="true">{LEGEND.map(([k, l]) => <span key={k} className={k}><i />{l}</span>)}</div>
       <div className="scroll" ref={scrollRef}>
         {selW ? (
-          <WaterDetail w={selW} date={p.date} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
+          <WaterDetail w={selW} date={p.date} sp={p.sp} status={p.status[selW.id]} wg={p.wg} notices={[...noticesFor(p.notices, selW.id), ...regionNotices(p.notices)]} onBack={p.onBack} onZoom={() => p.onZoom(selW.id)} />
         ) : (
           <>
             <div className={`tools${p.sort === 'near' ? ' near' : ''}`}>
