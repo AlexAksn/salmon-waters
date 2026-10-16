@@ -6,6 +6,7 @@ import type { Reading } from '../lib/flow';
 import type { WatersGeo } from '../lib/geo';
 import { countStatuses, isUnlisted, STATUS_ORDER, SUMMARY, type SpeciesPick, type Status } from '../lib/rules';
 import ChangingSoon from './ChangingSoon';
+import Weekend from './Weekend';
 import Notices from './Notices';
 import { noticesFor, regionNotices, type Notice } from '../lib/notices';
 import { favKey, toggleFav, useFavs } from '../lib/favs';
@@ -75,6 +76,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
             </div>
             {mine.length > 0 && <><div className="sect-t">My rivers</div><ul className="list">{mine.map(card)}</ul></>}
             <Notices notices={p.notices} fetchedAt={p.noticesFetchedAt} onSelect={p.onSelect} />
+            <Weekend date={p.date} />
             <ChangingSoon date={p.date} onSelect={p.onSelect} />
             {mine.length > 0 && <div className="sect-t">All waters</div>}
             <ul className="list">

@@ -1,14 +1,16 @@
 import type { RegionMeta, Water } from '../regions/model';
-import { dayOfYear, fmtDate, MON, ruleLine, seasonRuns, SPN, STATUS_LABEL, type SpeciesPick, type Status } from './rules';
+import { dayOfYear, fmtDate, MON, ruleLine, seasonRuns, SPN, STATUS_LABEL, SUMMARY, type SpeciesPick, type Status } from './rules';
+import { fmtRange, groupEvents, type WeekendSummary } from './weekend';
 
-// A share card: 1200×630 PNG (the Open Graph size) drawn on a canvas, plus the text that goes with it. Sent through the
-// Web Share API when the browser has it (phones), otherwise the link is copied and the image downloaded.
+// Share cards: 1200×630 PNGs (the Open Graph size) drawn on a canvas. One per river/day, one per region/weekend. Sent through
+// the Web Share API as a bare image (Facebook drops an image whenever a URL rides along, so links go separately) or downloaded.
 
 /** Fixed dark palette so cards look the same whatever theme the sender uses (values from styles.css dark mode). */
 const C = { bg: '#0d1317', panel: '#151d22', fg: '#e6ece7', muted: '#9aa8a0', line: '#27333a', open: '#43c374', cr: '#f0a62a', closed: '#f26d50', none: '#6c7771', tidal: '#6ea4cd' };
 const STATUS_COLOR: Record<Status, string> = { open: C.open, cr: C.cr, closed: C.closed, none: C.none, tidal: C.tidal };
 const W = 1200, H = 630, PAD = 64;
 const DISPLAY = "'Barlow Semi Condensed','Arial Narrow',system-ui,sans-serif", BODY = "'IBM Plex Sans',system-ui,sans-serif", MONO = "'IBM Plex Mono',Menlo,monospace";
+const SITE = 'alexaksn.github.io/salmon-waters';
 
 export interface ShareInput { w: Water; date: Date; sp: SpeciesPick; status: Status; region: RegionMeta; url: string }
 
@@ -23,6 +25,7 @@ export function cardLines(w: Water, date: Date, sp: SpeciesPick): string[] {
 }
 export const shareTitle = ({ w, date, status }: ShareInput) => `${w.name} · ${STATUS_LABEL[status]} · ${fmtDate(date)}`;
 
+// ---- drawing helpers ----
 /** Word-wrap `text` to `max` px in the current font; at most `lines` lines, the last one ellipsised. */
 function wrap(ctx: CanvasRenderingContext2D, text: string, max: number, lines: number): string[] {
   const out: string[] = []; let cur = '';
@@ -38,26 +41,51 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, max: number, lines: n
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
-
-export async function drawCard(s: ShareInput): Promise<HTMLCanvasElement> {
-  const { w, date, sp, status, region } = s;
+/** Bold label, then the rest in regular weight; wraps to `lines` lines inside `max` px. Returns the lines used. */
+function labelled(ctx: CanvasRenderingContext2D, label: string, rest: string, x: number, y: number, size: number, max: number, lines: number): number {
+  ctx.fillStyle = C.fg; ctx.font = `600 ${size}px ${BODY}`;
+  ctx.fillText(label, x, y);
+  const lw = ctx.measureText(label).width + (rest ? ctx.measureText(' ').width : 0);
+  ctx.font = `500 ${size}px ${BODY}`;
+  // first line shares the row with the label; measure the rest against the remaining width, then full width
+  const words = rest.split(' '); let cur = '', n = 0, cx = x + lw, avail = max - lw;
+  const flush = () => { ctx.fillText(cur, cx, y + n * (size * 1.5)); n++; cx = x; avail = max; cur = ''; };
+  for (const w of words) {
+    const t = cur ? `${cur} ${w}` : w;
+    if (ctx.measureText(t).width <= avail || !cur) cur = t;
+    else { if (n === lines - 1) { cur = wrap(ctx, `${cur} ${w}`, avail, 1)[0]; break; } flush(); cur = w; }
+  }
+  if (cur) flush();
+  return Math.max(1, n);
+}
+/** Blank card with the status stripe, the region header line and the footer. */
+async function blank(stripe: string, region: RegionMeta): Promise<[HTMLCanvasElement, CanvasRenderingContext2D]> {
   if (typeof document !== 'undefined' && 'fonts' in document) {
     await Promise.all([`700 72px ${DISPLAY}`, `500 26px ${BODY}`, `500 20px ${MONO}`].map((f) => document.fonts.load(f).catch(() => []))).catch(() => undefined);
   }
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d')!;
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = STATUS_COLOR[status]; ctx.fillRect(0, 0, 14, H); // status stripe, like the card's left border
-  ctx.textBaseline = 'alphabetic';
-
-  // header: brand · region
+  ctx.fillStyle = stripe; ctx.fillRect(0, 0, 14, H);
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
   ctx.fillStyle = C.muted; ctx.font = `500 20px ${MONO}`;
   ctx.fillText(`SALMON WATERS · ${region.name.toUpperCase()} · DFO REGION ${region.num}`, PAD, 70);
-
-  // river name (+ sub)
+  ctx.fillStyle = C.line; ctx.fillRect(PAD, H - 72, W - PAD * 2, 1);
+  ctx.fillStyle = C.muted; ctx.fillText(SITE, PAD, H - 34);
+  ctx.textAlign = 'right'; ctx.fillText('Not official · check DFO before you go', W - PAD, H - 34); ctx.textAlign = 'left';
+  return [cv, ctx];
+}
+function title(ctx: CanvasRenderingContext2D, text: string, y: number) {
   ctx.fillStyle = C.fg; ctx.font = `700 72px ${DISPLAY}`;
-  let name = w.name; while (ctx.measureText(name).width > W - PAD * 2 && name.length > 4) name = `${name.slice(0, -2).trimEnd()}…`;
-  ctx.fillText(name, PAD, 150);
+  let t = text; while (ctx.measureText(t).width > W - PAD * 2 && t.length > 4) t = `${t.slice(0, -2).trimEnd()}…`;
+  ctx.fillText(t, PAD, y);
+}
+
+// ---- one river, one day ----
+export async function drawCard(s: ShareInput): Promise<HTMLCanvasElement> {
+  const { w, date, sp, status } = s;
+  const [cv, ctx] = await blank(STATUS_COLOR[status], s.region);
+  title(ctx, w.name, 150);
   let y = 150;
   if (w.sub) { ctx.fillStyle = C.muted; ctx.font = `500 26px ${BODY}`; ctx.fillText(wrap(ctx, w.sub, W - PAD * 2, 1)[0], PAD, y += 40); }
 
@@ -72,12 +100,11 @@ export async function drawCard(s: ShareInput): Promise<HTMLCanvasElement> {
   // rule lines
   y += 52;
   ctx.font = `500 26px ${BODY}`;
-  const lines = cardLines(w, date, sp).flatMap((l) => wrap(ctx, l, W - PAD * 2, 2)).slice(0, 4);
-  for (const l of lines) {
-    const i = l.indexOf(':');
-    if (i > 0 && i < 20) { ctx.fillStyle = C.fg; ctx.font = `600 26px ${BODY}`; ctx.fillText(l.slice(0, i + 1), PAD, y); const bw = ctx.measureText(l.slice(0, i + 1)).width; ctx.font = `500 26px ${BODY}`; ctx.fillStyle = C.fg; ctx.fillText(l.slice(i + 1), PAD + bw, y); }
-    else { ctx.fillStyle = C.fg; ctx.fillText(l, PAD, y); }
-    y += 38;
+  let used = 0;
+  for (const l of cardLines(w, date, sp)) {
+    if (used >= 4) break;
+    const i = l.indexOf(':'), [lab, rest] = i > 0 && i < 24 ? [l.slice(0, i + 1), l.slice(i + 2)] : ['', l];
+    const n = labelled(ctx, lab, rest, PAD, y, 26, W - PAD * 2, Math.min(2, 4 - used)); used += n; y += 39 * n;
   }
 
   // season strip for the shared species (Any = the union the status uses), with today marked
@@ -95,40 +122,72 @@ export async function drawCard(s: ShareInput): Promise<HTMLCanvasElement> {
     ctx.fillStyle = C.fg; ctx.fillRect(nx - 1.5, sy - 6, 3, sh + 12);
     ctx.font = `500 18px ${MONO}`; ctx.fillStyle = C.muted; ctx.fillText(`${sp === 'any' ? 'Any salmon' : SPN[sp]} · ${date.getFullYear()} season`, PAD, sy - 14);
   }
-
-  // footer
-  ctx.fillStyle = C.line; ctx.fillRect(PAD, H - 72, W - PAD * 2, 1);
-  ctx.fillStyle = C.muted; ctx.font = `500 20px ${MONO}`;
-  ctx.fillText('alexaksn.github.io/salmon-waters', PAD, H - 34);
-  ctx.textAlign = 'right'; ctx.fillText('Not official · check DFO before you go', W - PAD, H - 34); ctx.textAlign = 'left';
   return cv;
 }
 
+// ---- one region, one weekend ----
+export interface WeekendInput { region: RegionMeta; date: Date; summary: WeekendSummary }
+export const weekendTitle = ({ region, summary: s }: WeekendInput) => `${region.name} · weekend of ${fmtRange(s.sat, s.sun)} · ${s.counts.open} open, ${s.events.length} change${s.events.length === 1 ? '' : 's'}`;
+export async function drawWeekend(i: WeekendInput): Promise<HTMLCanvasElement> {
+  const { date, summary: s } = i;
+  const [cv, ctx] = await blank(C.open, i.region);
+  title(ctx, `This weekend · ${fmtRange(s.sat, s.sun)}`, 150);
+
+  // counts: big numbers in status colours
+  let x = PAD; const y = 236;
+  for (const [k, label] of SUMMARY) {
+    ctx.fillStyle = STATUS_COLOR[k]; ctx.font = `700 64px ${DISPLAY}`;
+    const n = String(s.counts[k]); ctx.fillText(n, x, y);
+    const nw = ctx.measureText(n).width;
+    ctx.fillStyle = C.muted; ctx.font = `500 18px ${MONO}`; ctx.fillText(label.toUpperCase(), x + nw + 12, y);
+    x += nw + 12 + ctx.measureText(label.toUpperCase()).width + 56;
+  }
+
+  // changes between the date and Sunday
+  ctx.fillStyle = C.muted; ctx.font = `500 18px ${MONO}`;
+  ctx.fillText(s.events.length ? `CHANGES ${fmtDate(date).toUpperCase()} → SUN ${s.sun.getDate()}` : 'CHANGES THROUGH SUNDAY', PAD, 300);
+  let ly = 340;
+  if (!s.events.length) { ctx.fillStyle = C.fg; ctx.font = `500 26px ${BODY}`; ctx.fillText('No rule changes. What is open today stays open through the weekend.', PAD, ly); }
+  const groups = groupEvents(s.events), maxLines = 5; let used = 0, shown = 0;
+  for (const g of groups) {
+    if (used >= maxLines) break;
+    ctx.fillStyle = C.muted; ctx.font = `500 20px ${MONO}`; ctx.fillText(fmtDate(g.d), PAD, ly);
+    ctx.fillStyle = g.color === 'gear' ? C.tidal : STATUS_COLOR[g.color]; ctx.fillRect(PAD + 86, ly - 16, 4, 20);
+    const n = labelled(ctx, `${g.text}:`, g.names.join(', '), PAD + 104, ly, 24, W - PAD * 2 - 104, Math.min(2, maxLines - used));
+    used += n; shown++; ly += 36 * n + 4;
+  }
+  if (shown < groups.length) { ctx.fillStyle = C.muted; ctx.font = `500 20px ${BODY}`; ctx.fillText(`+${groups.length - shown} more, see the app`, PAD + 104, ly); }
+  return cv;
+}
+
+// ---- sending ----
 const toBlob = (cv: HTMLCanvasElement) => new Promise<Blob>((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('toBlob'))), 'image/png'));
-const fileName = (s: ShareInput) => `salmon-waters-${s.w.id}-${s.date.getFullYear()}${String(s.date.getMonth() + 1).padStart(2, '0')}${String(s.date.getDate()).padStart(2, '0')}.png`;
+const ymd = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 
 export type ShareMode = 'link' | 'card';
 export type ShareResult = 'shared' | 'copied' | 'saved' | 'cancelled' | 'failed';
-/** Share sheet with image + text + link where supported; otherwise copy the link and save the image. */
 async function sheet(data: ShareData): Promise<ShareResult | null> {
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (typeof nav.share !== 'function' || (data.files && nav.canShare && !nav.canShare(data))) return null;
   try { await nav.share(data); return 'shared'; } catch (e) { return (e as Error).name === 'AbortError' ? 'cancelled' : null; }
 }
-/** 'link': the URL (and title) — Facebook and friends make a link post with the site card. 'card': the PNG alone — a photo post
- *  of the river card. Facebook ignores an image whenever a URL is in the payload, so the two are not combined. Without a share
- *  sheet, 'link' copies the URL and 'card' downloads the image. */
-export async function shareWater(s: ShareInput, mode: ShareMode): Promise<ShareResult> {
-  const title = shareTitle(s);
-  if (mode === 'link') {
-    const r = await sheet({ title, text: `${title}\n${s.url}`, url: s.url });
-    if (r) return r;
-    try { await navigator.clipboard.writeText(s.url); return 'copied'; } catch { return 'failed'; }
-  }
+/** The PNG alone through the share sheet (a photo post), else a download. */
+async function shareImage(draw: () => Promise<HTMLCanvasElement>, name: string, title: string): Promise<ShareResult> {
   let file: File;
-  try { file = new File([await toBlob(await drawCard(s))], fileName(s), { type: 'image/png' }); } catch { return 'failed'; }
+  try { file = new File([await toBlob(await draw())], name, { type: 'image/png' }); } catch { return 'failed'; }
   const r = await sheet({ title, files: [file] });
   if (r) return r;
   const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
   return 'saved';
 }
+/** 'link': the URL (and title) — Facebook and friends make a link post with the site card. 'card': the river PNG alone.
+ *  Facebook ignores an image whenever a URL is in the payload, so the two are not combined. Without a share sheet,
+ *  'link' copies the URL and 'card' downloads the image. */
+export async function shareWater(s: ShareInput, mode: ShareMode): Promise<ShareResult> {
+  const t = shareTitle(s);
+  if (mode === 'card') return shareImage(() => drawCard(s), `salmon-waters-${s.w.id}-${ymd(s.date)}.png`, t);
+  const r = await sheet({ title: t, text: `${t}\n${s.url}`, url: s.url });
+  if (r) return r;
+  try { await navigator.clipboard.writeText(s.url); return 'copied'; } catch { return 'failed'; }
+}
+export const shareWeekend = (i: WeekendInput) => shareImage(() => drawWeekend(i), `salmon-waters-${i.region.id}-weekend-${ymd(i.summary.sat)}.png`, weekendTitle(i));
