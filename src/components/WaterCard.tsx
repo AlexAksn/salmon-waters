@@ -18,7 +18,7 @@ export default function WaterCard({ w, date, sp, status, selected, dist, flow, n
       </div>
       {rl ? (
         <div className="rule">
-          {rl.closed ? <b>{rl.closed}</b> : rl.parts.length === 0 ? <span className="muted">No salmon opportunity today</span>
+          {rl.closed ? <b>{rl.closed}</b> : rl.all ? <span><b>All salmon</b> {rl.all}</span> : rl.parts.length === 0 ? <span className="muted">No salmon opportunity today</span>
             : rl.parts.map((p, i) => <span key={p.sp}>{i > 0 && ' · '}<b>{SPN[p.sp]}</b> {p.text}</span>)}
         </div>
       ) : (

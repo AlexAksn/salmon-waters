@@ -38,13 +38,15 @@ a{color:var(--accent)}
 .brand{display:flex;align-items:baseline;gap:10px;min-width:0}
 .brand h1{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:.01em;margin:0;line-height:1.1}
 .brand span{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.brand select.region{appearance:none;-webkit-appearance:none;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right center;border:0;color:var(--muted);font:inherit;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:2px 14px 2px 0;cursor:pointer;max-width:100%}
+.brand select.region:hover{color:var(--fg)}
 .datebar{display:flex;align-items:center;gap:6px}
 .datebar input[type=date],.ibtn,.tbtn,.tools input[type=search],.tools select,.btn{border:1px solid var(--line);background:var(--panel2);border-radius:6px}
 .datebar input[type=date]{padding:5px 8px;font-family:var(--font-mono);font-size:13px}
 .ibtn{width:32px;height:32px;display:inline-grid;place-items:center;font-size:16px;line-height:1}
 .ibtn:hover,.tbtn:hover{border-color:var(--accent)}
 .tbtn{padding:5px 10px;font-size:13px}
-.chips{display:flex;gap:6px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .chips .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .chip{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500}
 .chip[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}

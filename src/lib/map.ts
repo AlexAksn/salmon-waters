@@ -43,6 +43,7 @@ export class SalmonMap {
   private casing: L.Polyline;
   private waters: Record<string, WaterLayers> = {};
   private dataBounds: L.LatLngBounds;
+  private home: L.LatLngBounds;
   private tiles: L.TileLayer | null = null;
   private basemap: Basemap = 'chart';
   private userMarker: L.Layer | null = null;
@@ -56,6 +57,7 @@ export class SalmonMap {
     this.readColors();
     const [minLon, minLat, maxLon, maxLat] = data.bbox;
     this.dataBounds = L.latLngBounds([minLat, minLon], [maxLat, maxLon]);
+    this.home = L.latLngBounds(opts.home);
     this.map = L.map(el, { preferCanvas: true, zoomControl: false, attributionControl: false, minZoom: 7, maxZoom: 18, zoomSnap: 0.5, wheelPxPerZoomLevel: 90, maxBounds: this.dataBounds, maxBoundsViscosity: 1 });
     L.control.zoom({ position: 'topright' }).addTo(this.map);
     this.attribution = L.control.attribution({ position: 'bottomright', prefix: false }).addTo(this.map);
@@ -85,6 +87,7 @@ export class SalmonMap {
     // Canvas draw order follows layer creation order, so the casing is created (and added) before the status lines it sits under.
     this.casing = L.polyline([], { renderer: R.reg, color: C.panel, weight: 7, opacity: 0.9, lineCap: 'round', lineJoin: 'round', ...quiet }).addTo(this.g.reg);
     const casingLines: L.LatLngExpression[][] = [];
+    const labelled = new Set<string>(); // one label per river, not per regulated stretch
     for (const w of waters) {
       const thin = isUnlisted(w);
       const wl: WaterLayers = { lines: [], hit: [], thin, isLake: !!w.lake };
@@ -102,7 +105,7 @@ export class SalmonMap {
           if (!thin) casingLines.push(latlngs);
           wl.lines.push(L.polyline(latlngs, thin ? { renderer: R.un, color: C.none, weight: 1.6, opacity: 0.9 } : { renderer: R.reg, color: C.none, weight: 4, lineCap: 'round', lineJoin: 'round' }).addTo(thin ? this.g.un : this.g.reg));
           wl.hit.push(bindHit(L.polyline(latlngs, hitOpts)));
-          if (i === 0 && !thin) L.tooltip({ permanent: true, direction: 'center', className: 'rlbl', interactive: false }).setLatLng(ll(seg[Math.floor(seg.length / 2)])).setContent(w.name).addTo(this.g.rlabels);
+          if (i === 0 && !thin && !labelled.has(w.name)) { labelled.add(w.name); L.tooltip({ permanent: true, direction: 'center', className: 'rlbl', interactive: false }).setLatLng(ll(seg[Math.floor(seg.length / 2)])).setContent(w.name).addTo(this.g.rlabels); }
         });
       }
       this.waters[w.id] = wl;
@@ -114,7 +117,7 @@ export class SalmonMap {
     [this.g.un, this.g.halo, this.g.reg, this.g.hit].forEach((x) => x.addTo(this.map));
     this.map.on('zoomend', () => this.restyleZoom());
     this.fitMinZoom();
-    this.map.fitBounds(opts.home, { padding: [10, 10] });
+    this.map.fitBounds(this.home, { padding: [10, 10] });
     this.setBasemap('chart');
     this.themeMq.addEventListener?.('change', this.onTheme);
   }
@@ -190,8 +193,9 @@ export class SalmonMap {
     this.userMarker = L.circleMarker([lat, lon], { radius: 7, color: '#fff', weight: 2, fillColor: this.C.tidal, fillOpacity: 1 }).bindTooltip('You are here').addTo(this.map);
     this.map.setView([lat, lon], Math.max(this.map.getZoom(), 10));
   }
-  /** Never let the viewport grow past the data extent (which would show the clipped edge). */
-  private fitMinZoom() { this.map.setMinZoom(Math.max(7, this.map.getBoundsZoom(this.dataBounds, true))); }
+  /** Never let the viewport grow past the data extent (which would show the clipped edge), except as far as needed to
+   * show the region's home view in full (a region whose home view is its whole extent, like Vancouver Island). */
+  private fitMinZoom() { this.map.setMinZoom(Math.max(7, Math.min(this.map.getBoundsZoom(this.dataBounds, true), this.map.getBoundsZoom(this.home, false)))); }
   invalidate() { this.map.invalidateSize(); this.fitMinZoom(); }
   destroy() {
     this.themeMq.removeEventListener?.('change', this.onTheme);

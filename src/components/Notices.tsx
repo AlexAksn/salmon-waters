@@ -1,4 +1,5 @@
 import { useRegion } from '../lib/region';
+import { fmtDate } from '../lib/rules';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 
 interface Props { notices: Notice[]; fetchedAt: string | null; onSelect: (id: string) => void }
@@ -8,7 +9,7 @@ export default function Notices({ notices, fetchedAt, onSelect }: Props) {
   const { byId } = useRegion();
   return (
     <details className="soon" open={notices.length > 0}>
-      <summary><span>Fishery notices</span><small>{`last ${NOTICE_DAYS} days`}{fetchedAt && ` · checked ${fmtNoticeDate(fetchedAt.slice(0, 10))}`}</small></summary>
+      <summary><span>Fishery notices</span><small>{`last ${NOTICE_DAYS} days`}{fetchedAt && ` · checked ${fmtDate(new Date(fetchedAt))}`}</small></summary>
       <ul>
         {notices.length === 0 && <li><span className="d" /><span className="muted">No recreational salmon notices for Region 2 lately.</span></li>}
         {notices.map((n) => (

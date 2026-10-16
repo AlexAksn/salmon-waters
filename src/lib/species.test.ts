@@ -30,4 +30,10 @@ describe('a new species is data, not code', () => {
     const ev = upcoming(D(10, 14), 45, [vedder]);
     expect(ev.map((e) => `${e.d.getMonth() + 1}-${e.d.getDate()}:${e.ch.map((c) => c.kind === 'sp' ? `${c.sp}→${c.to}` : 'gear').join(',')}`)).toEqual(['10-20:chum→open']);
   });
+  it('an all-salmon non-retention rule makes every species catch & release', () => {
+    const sproat: Water = { id: 'test-sproat', name: 'Sproat', rules: [{ sp: 'all', kind: 'nr', from: '04-01', to: '03-31', limit: 'No retention of salmon' }] };
+    expect(statusOf(sproat, D(9, 1), 'any')).toBe('cr'); expect(statusOf(sproat, D(9, 1), 'chum')).toBe('cr');
+    expect(ruleLine(sproat, D(9, 1), 'any')).toMatchObject({ all: 'catch & release', parts: [] });
+    expect(ruleLine(sproat, D(9, 1), 'coho').parts).toEqual([{ sp: 'coho', text: 'catch & release' }]);
+  });
 });

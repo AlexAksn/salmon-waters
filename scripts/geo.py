@@ -93,8 +93,17 @@ rail_feats = load('rail.json')['features']
 rail = simp_lines(rail_feats, 0.0004, 4)
 
 # ---------- river mainstems: one blue line per GNIS name, vertices carry route measures ----------
+feats = load('streams.json')['features']
+if CFG.get('mainstemByBlueLine'):
+    # Several distinct streams can share a GNIS name inside a large bbox; keep only the longest blue line per name.
+    tot = collections.defaultdict(float)
+    for f in feats: p = f['properties']; tot[(p['GNIS_NAME'], p['BLUE_LINE_KEY'])] += p['LENGTH_METRE'] or 0
+    best = {}
+    for (n, k), L in tot.items():
+        if n not in best or L > tot[(n, best[n])]: best[n] = k
+    feats = [f for f in feats if f['properties']['BLUE_LINE_KEY'] == best[f['properties']['GNIS_NAME']]]
 by = collections.defaultdict(list)
-for f in load('streams.json')['features']:
+for f in feats:
     p = f['properties']
     for line in lines_of(f['geometry']):
         by[p['GNIS_NAME']].append((p['DOWNSTREAM_ROUTE_MEASURE'], p['LENGTH_METRE'], [tuple(c[:2]) for c in line]))
@@ -143,11 +152,17 @@ if BOUNDARIES:
     allroads = {f['id']: f for f in br['features'] + roads2['features'] + roads['features']}.values()
     byname = collections.defaultdict(list)
     for f in allroads: byname[f['properties']['ROAD_NAME_FULL']].append(f)
+    missing = lambda *names: [n for n in names if n not in mainstem]
     for stem, road in CFG['probes']['crossings']:
+        if missing(stem): print('X', stem, 'x', road, 'NO STEM'); continue
         print('X', stem, 'x', road, crossings(stem, byname.get(road, [])))
-    for stem in CFG['probes']['rail']: print('X', stem, 'x rail', crossings(stem, rail_feats))
+    for stem in CFG['probes']['rail']:
+        if missing(stem): print('X', stem, 'x rail NO STEM'); continue
+        print('X', stem, 'x rail', crossings(stem, rail_feats))
     for stem, trib in CFG['probes']['confluences']:
+        if missing(stem, trib): print('CONFLUENCE', trib, 'on', stem, 'NO STEM', missing(stem, trib)); continue
         m, _, d = project(mainstem[stem], mainstem[trib]['pts'][0]); print('CONFLUENCE', trib, 'on', stem, 'm', round(m), 'd', round(d))
     for name, lon, lat in CFG['probes']['points']:
+        if missing(name): print('PT', name, 'NO STEM'); continue
         p = (lon, lat)
         m, q, d = project(mainstem[name], p); print('PT', name, 'm', round(m), 'd', round(d), 'ends', round(mainstem[name]['m'][0]), round(mainstem[name]['m'][-1]))

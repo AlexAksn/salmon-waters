@@ -1,4 +1,4 @@
-# Salmon Waters — Lower Mainland (DFO Region 2)
+# Salmon Waters — BC freshwater salmon regs on a map (DFO Regions 1 and 2)
 
 > **Not an official source.** This is a hobby project that re-presents Fisheries and Oceans Canada's published
 > regulations. Rules are transcribed by hand and can be wrong or out of date; boundary points are approximate;
@@ -6,7 +6,7 @@
 > current fishery notices and on-site signs before you fish. Live site: https://alexaksn.github.io/salmon-waters/
 
 "Can I fish for salmon here, right now?" — an interactive map of the freshwater salmon openings, closures and
-boundaries published by DFO for Region 2 (Lower Mainland):
+boundaries published by DFO for Region 2 (Lower Mainland) and Region 1 (Vancouver Island):
 https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html
 
 - Every regulated stretch is coloured by its status for the chosen **date + species**: open / catch & release / closed / not listed / tidal.
@@ -50,7 +50,7 @@ OpenTopoMap / Esri tile servers are fine for personal use, not for heavy traffic
 
 ## Layout
 Rules and geometry are partitioned by DFO region: everything specific to one region lives in `src/regions/<id>/`
-and `public/data/<id>/`; the engine, map and UI are shared. Region 2 is the only region so far.
+and `public/data/<id>/`; the engine, map and UI are shared. Regions so far: r2 Lower Mainland, r1 Vancouver Island.
 ```
 src/regions/model.ts        data model every region shares: Rule/Water types, species registry (chinook, coho, chum,
                             pink, sockeye) — a rule naming a new species adds its chip/strip row automatically

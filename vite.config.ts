@@ -13,7 +13,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Salmon Waters · Lower Mainland',
+        name: 'Salmon Waters · BC',
         short_name: 'Salmon Waters',
         description: 'Where can I fish for salmon right now? DFO Region 2 openings, closures, boundaries and river flows.',
         theme_color: '#1f5f8b',

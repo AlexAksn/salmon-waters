@@ -1,0 +1,29 @@
+{
+  "id": "r1",
+  "num": 1,
+  "name": "Vancouver Island",
+  "dfo": {
+    "url": "https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region1-eng.html",
+    "date": "2026-10-05",
+    "tableHash": "32517689ee2c9ab4"
+  },
+  "home": [[48.3, -128.4], [50.95, -123.3]],
+  "dayNote": "4 salmon/day all species combined",
+  "notices": {
+    "region": "region 1|vancouver island",
+    "waters": {
+      "adam-eve": "adam river|eve river|adam and eve", "campbell": "campbell river", "campbell-mouth": "campbell river",
+      "cayeghle": "cayeghle|colonial river", "chemainus": "chemainus", "cluxewe": "cluxewe", "comox-lake": "comox lake", "conuma": "conuma",
+      "courtenay": "courtenay river", "cowichan-upper": "cowichan", "cowichan-lower": "cowichan", "goldstream": "goldstream", "koksilah": "koksilah",
+      "little-qualicum": "little qualicum", "little-qualicum-upper": "little qualicum", "nahwitti": "nahwitti",
+      "nanaimo-tidal": "nanaimo river", "nanaimo-lower": "nanaimo river", "nanaimo-upper": "nanaimo river", "nanaimo-canyon": "nanaimo river", "nanaimo-above": "nanaimo river",
+      "nitinat": "nitinat", "nitinat-upper": "nitinat", "puntledge": "puntledge",
+      "qualicum-upper": "big qualicum|(?<!little )qualicum river", "qualicum-hatchery": "big qualicum|(?<!little )qualicum river", "qualicum-lower": "big qualicum|(?<!little )qualicum river",
+      "quatse": "quatse", "quinsam": "quinsam", "reay": "reay creek", "san-juan": "san juan", "seymour-inlet": "seymour river", "shawnigan": "shawnigan",
+      "somass": "somass", "somass-park": "somass", "somass-papermill": "somass", "sproat": "sproat", "sproat-upper": "sproat",
+      "stamp": "\\bstamp\\b", "stamp-upper": "\\bstamp\\b", "stamp-lower": "\\bstamp\\b", "washlawlis": "washlawlis", "waukwaas": "waukwaas",
+      "u-englishman": "englishman", "u-oyster": "oyster river", "u-salmon-sayward": "salmon river", "u-nimpkish": "nimpkish", "u-gold": "gold river", "u-sooke": "sooke river",
+      "u-sarita": "sarita", "u-tsolum": "tsolum", "u-marble": "marble river", "u-keogh": "keogh", "u-zeballos": "zeballos", "u-tsitika": "tsitika", "u-kokish": "kokish", "u-browns": "browns river", "u-san-juan-above": "san juan"
+    }
+  }
+}

@@ -89,7 +89,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
       <div className={`foot${footOpen ? ' open' : ''}`}>
         Not an official source: confirm with the <a href={region.dfo.url} target="_blank" rel="noopener">DFO page</a>, fishery notices and on-site signs before you fish.{' '}
         <span className="long">Rules from the DFO Region {region.num} freshwater salmon page (modified {region.dfo.date}). River lines, lakes, roads: BC Freshwater Atlas and Digital Road Atlas (Open Government Licence – BC).
-        Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional).{p.dfoCheckedAt && <> DFO page last checked {p.dfoCheckedAt.slice(0, 10)}.</>}</span>
+        Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional).{p.dfoCheckedAt && <> DFO page last checked {new Date(p.dfoCheckedAt).toLocaleDateString('en-CA')}.</>}</span>
         <button className="more" onClick={() => setFootOpen((o) => !o)} aria-expanded={footOpen}>{footOpen ? 'Less' : 'Sources & disclaimer'}</button>
         {' · '}<a href="https://github.com/AlexAksn/salmon-waters/issues" target="_blank" rel="noopener">Report a problem</a>
       </div>

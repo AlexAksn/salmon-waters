@@ -14,6 +14,8 @@ export function speciesPicksFor(waters: Water[]): SpeciesPickOption[] {
 }
 /** Species with their own rules on this water (drives season-strip rows and the detail list). */
 export const waterFish = (w: Water): Fish[] => FISH.filter((f) => w.rules.some((r) => r.sp === f));
+/** waterFish plus any species an all-salmon rule covers today (so "catch and release for all salmon" lists every species). */
+export const dayFish = (w: Water, s: DaySummary): Fish[] => FISH.filter((f) => s.fish[f].keep.length || s.fish[f].nr.length || w.rules.some((r) => r.sp === f));
 export const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export const STATUS_LABEL: Record<Status, string> = {
   open: 'Open', cr: 'Catch & release', closed: 'Closed', none: 'Not listed', tidal: 'Tidal water',
@@ -49,8 +51,8 @@ export function daySummary(w: Water, d: Date): DaySummary {
   const act = activeRules(w, d);
   const fish = Object.fromEntries(FISH.map((f): [Fish, FishDay] => [f, { keep: [], nr: [] }])) as Record<Fish, FishDay>;
   for (const r of act) {
-    if (r.sp === 'all') continue;
-    if (r.kind === 'keep') fish[r.sp].keep.push(r); else if (r.kind === 'nr') fish[r.sp].nr.push(r);
+    if (r.kind !== 'keep' && r.kind !== 'nr') continue;
+    for (const f of r.sp === 'all' ? FISH : [r.sp]) fish[f][r.kind].push(r);
   }
   return { closed: act.find((r) => r.kind === 'closed'), fish, gear: act.filter((r) => r.kind === 'gear') };
 }
@@ -84,10 +86,13 @@ export const dayOfYear = (d: Date) => Math.round((d.getTime() - new Date(d.getFu
 
 // ---- one-line summary for a card ----
 export interface RulePart { sp: Fish; text: string }
-export interface RuleLine { closed?: string; parts: RulePart[]; gear: string[] }
+/** `all` is set instead of parts when one non-retention rule covers every species. */
+export interface RuleLine { closed?: string; all?: string; parts: RulePart[]; gear: string[] }
 export function ruleLine(w: Water, d: Date, sp: SpeciesPick): RuleLine {
   const s = daySummary(w, d);
   if (s.closed) return { closed: s.closed.limit || 'No fishing for salmon', parts: [], gear: [] };
+  const gear = s.gear.map((r) => r.limit!);
+  if (sp === 'any' && FISH.every((f) => !s.fish[f].keep.length && s.fish[f].nr.some((r) => r.sp === 'all'))) return { all: 'catch & release', parts: [], gear };
   const parts: RulePart[] = [];
   for (const f of sp === 'any' ? FISH : [sp]) {
     const fd = s.fish[f];
@@ -95,7 +100,7 @@ export function ruleLine(w: Water, d: Date, sp: SpeciesPick): RuleLine {
     else if (fd.nr.length) parts.push({ sp: f, text: 'catch & release' });
     else if (sp !== 'any') parts.push({ sp: f, text: 'closed' });
   }
-  return { parts, gear: s.gear.map((r) => r.limit!) };
+  return { parts, gear };
 }
 
 // ---- season strip: depends only on (water, species, year), so compute once ----

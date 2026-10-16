@@ -1,0 +1,38 @@
+{
+  "fetchedAt": "2026-10-16T04:02:01.673Z",
+  "ok": true,
+  "error": null,
+  "notices": [
+    {
+      "fn": "FN1069",
+      "docId": "368896",
+      "subject": "Coho - Stamp River - Region 1 - Daily Limit - Effective October 3, 2026",
+      "date": "2026-09-29",
+      "sent": "2026-09-29 16:31",
+      "url": "https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=368896&ID=all",
+      "region": true,
+      "waters": [
+        "stamp",
+        "stamp-upper",
+        "stamp-lower"
+      ]
+    },
+    {
+      "fn": "FN1013",
+      "docId": "367531",
+      "subject": "Coho - Stamp and Somass rivers - Region 1 - Coho Management Measures - Effective September 19, 2026",
+      "date": "2026-09-17",
+      "sent": "2026-09-17 10:22",
+      "url": "https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=367531&ID=all",
+      "region": true,
+      "waters": [
+        "somass",
+        "somass-park",
+        "somass-papermill",
+        "stamp",
+        "stamp-upper",
+        "stamp-lower"
+      ]
+    }
+  ]
+}

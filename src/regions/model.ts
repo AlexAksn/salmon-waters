@@ -27,16 +27,18 @@ export type City = [name: string, lon: number, lat: number, rank: 1 | 2 | 3];
 export interface Gauge { stn: string; name: string; note?: string }
 
 /** src/regions/<id>/region.json. The scripts also read dfo.tableHash and the notice patterns from it. */
-export interface RegionJson { id: string; num: number; name: string; dfo: { url: string; date: string; tableHash: string }; home: number[][] }
+export interface RegionJson { id: string; num: number; name: string; dfo: { url: string; date: string; tableHash: string }; home: number[][]; dayNote: string }
 export interface RegionMeta {
   id: string; num: number; name: string;
   /** The DFO page the rules were transcribed from, and the page date of that transcription. */
   dfo: { url: string; date: string };
   /** Initial map view, [[south, west], [north, east]]. */
   home: [[number, number], [number, number]];
+  /** One line of region-wide limits shown under every water's rules. */
+  dayNote: string;
 }
 export const toMeta = (j: RegionJson): RegionMeta => ({
-  id: j.id, num: j.num, name: j.name, dfo: { url: j.dfo.url, date: j.dfo.date },
+  id: j.id, num: j.num, name: j.name, dfo: { url: j.dfo.url, date: j.dfo.date }, dayNote: j.dayNote,
   home: [[j.home[0][0], j.home[0][1]], [j.home[1][0], j.home[1][1]]],
 });
 /** Everything the app needs about one region once its module has loaded. */

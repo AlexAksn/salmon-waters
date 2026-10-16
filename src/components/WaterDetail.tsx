@@ -1,7 +1,7 @@
 import type { Water } from '../regions/model';
 import { useRegion } from '../lib/region';
 import type { WatersGeo } from '../lib/geo';
-import { active, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, waterFish, type Status } from '../lib/rules';
+import { active, dayFish, daySummary, FISH, fmtDate, fmtMD, KIND_STATUS, sameDay, SPN, STATUS_LABEL, type Status } from '../lib/rules';
 import FlowPanel from './FlowPanel';
 import { fmtNoticeDate, NOTICE_DAYS, type Notice } from '../lib/notices';
 import SeasonStrip from './SeasonStrip';
@@ -20,6 +20,8 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
   const day = w.elsewhere ? null : daySummary(w, date);
   const marks = nearMarks(w, wg);
   const notice = (id?: string) => (id ? <> <a href={region.notices[id]} target="_blank" rel="noopener">{id}</a></> : null);
+  // One "catch and release for all salmon" rule and nothing to keep: say it once instead of five times.
+  const allNr = !!day && !day.closed && FISH.every((f) => !day.fish[f].keep.length && day.fish[f].nr.some((r) => r.sp === 'all'));
   return (
     <div className="detail">
       <button className="back" onClick={onBack}>‹ All waters</button>
@@ -35,13 +37,14 @@ export default function WaterDetail({ w, date, status, wg, notices, onBack, onZo
           <>
             {day.closed && <div>{day.closed.limit || 'No fishing for salmon'}</div>}
             <ul>
-              {!day.closed && waterFish(w).map((f) => {
+              {allNr && <li><b>All salmon:</b> catch & release only (non-retention)</li>}
+              {!day.closed && !allNr && dayFish(w, day).map((f) => {
                 const { keep, nr } = day.fish[f];
                 return <li key={f}><b>{SPN[f]}:</b> {keep.length ? keep.map((r, i) => <span key={i}>{i > 0 && '; '}{r.limit}{notice(r.notice)}</span>) : nr.length ? 'catch & release only (non-retention)' : 'no opportunity today'}</li>;
               })}
-              {!day.closed && waterFish(w).length < FISH.length && <li className="muted">Other salmon: no opportunity listed</li>}
+              {!day.closed && !allNr && dayFish(w, day).length < FISH.length && <li className="muted">Other salmon: no opportunity listed</li>}
               {day.gear.map((r, i) => <li key={`g${i}`}><b>Gear:</b> {r.limit}</li>)}
-              <li>Daylight hours only · 4 salmon/day all species combined</li>
+              <li>{region.dayNote}</li>
             </ul>
           </>
         )}

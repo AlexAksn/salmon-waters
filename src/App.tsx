@@ -16,7 +16,7 @@ import Panel from './components/Panel';
 
 export type SortMode = 'status' | 'name' | 'near';
 /** Device preferences. Species is deliberately not here: it is a per-trip choice carried only by the URL. */
-export interface Prefs { sort: SortMode; near: string; showUn: boolean; base: Basemap }
+export interface Prefs { sort: SortMode; near: string; showUn: boolean; base: Basemap; region?: string }
 interface DfoStatus { ok: boolean; checkedAt: string; pageModified: string | null; stale: boolean }
 /** A region's module plus its geometry: everything below the header needs all three. */
 interface Loaded { region: RegionData; base: BaseData; wg: WatersGeo }
@@ -33,7 +33,8 @@ const LIVE: RequestInit = { cache: 'no-cache' };
 export default function App() {
   const url = useMemo(readUrl, []);
   const prefs0 = useMemo(loadPrefs, []);
-  const [regionId] = useState(url.region ?? DEFAULT_REGION);
+  // Region: URL wins, then the last one used on this device, then the default.
+  const [regionId, setRegionId] = useState(url.region ?? (regionEntry(prefs0.region)?.id ?? DEFAULT_REGION));
   const [data, setData] = useState<Loaded | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [date, setDate] = useState<Date>(url.date ?? new Date());
@@ -56,6 +57,7 @@ export default function App() {
     const entry = regionEntry(regionId);
     if (!entry) { setErr(`Unknown region ${regionId}`); return; }
     let live = true;
+    setData(null); setDfo(null); setNoticeFile(null); setFlows({});
     Promise.all([entry.load(), loadJson<BaseData>(regionId, 'base.json'), loadJson<WatersGeo>(regionId, 'waters.json')])
       .then(([region, base, wg]) => { if (live) setData({ region, base, wg }); }).catch((e) => { if (live) setErr(String(e)); });
     loadJson<DfoStatus>(regionId, 'dfo-status.json', LIVE).then((d) => { if (live) setDfo(d); }).catch(() => { /* optional */ });
@@ -63,10 +65,13 @@ export default function App() {
     return () => { live = false; };
   }, [regionId]);
   useEffect(() => { writeUrl({ region: regionId, date, sp, sel, base }); }, [regionId, date, sp, sel, base]);
-  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base]);
+  useEffect(() => { try { localStorage.setItem(PREF_KEY, JSON.stringify({ sort, near, showUn, base, region: regionId } satisfies Prefs)); } catch { /* ignore */ } }, [sort, near, showUn, base, regionId]);
 
   const region = data?.region ?? null;
   const waters = region?.waters ?? NO_WATERS;
+  // "Nearest to <city>" carried over from another region: fall back to this region's main city.
+  useEffect(() => { if (region && near !== 'me' && !region.cities.some((c) => c[0] === near)) setNear(region.cities[0][0]); }, [region, near]);
+  const switchRegion = (id: string) => { if (id === regionId) return; setSel(null); setFilter(null); setQ(''); setRegionId(id); };
   const picks = useMemo(() => speciesPicksFor(waters), [waters]);
   // A species from the URL that this region has no rules for falls back to Any.
   useEffect(() => { if (region && !picks.some((p) => p.id === sp)) setSp('any'); }, [region, picks, sp]);
@@ -132,7 +137,7 @@ export default function App() {
   return (
     <RegionContext.Provider value={region}>
       <div className="app">
-        <Header date={date} sp={sp} picks={picks} onDate={setDate} onShift={(n) => setDate((d) => addDays(d, n))} onToday={() => setDate(new Date())} onSp={setSp} />
+        <Header date={date} sp={sp} picks={picks} onDate={setDate} onShift={(n) => setDate((d) => addDays(d, n))} onToday={() => setDate(new Date())} onSp={setSp} onRegion={switchRegion} />
         {((dfo?.ok && dfo.stale) || fresh) && (
           <div className="banner" role="status">
             {dfo?.ok && dfo.stale && <span><b>Heads up:</b> DFO changed the Region {region.num} page{dfo.pageModified ? ` on ${dfo.pageModified}` : ''}; these rules were transcribed from the {region.dfo.date} version. <a href={region.dfo.url} target="_blank" rel="noopener">Check the DFO page</a> before you go.</span>}

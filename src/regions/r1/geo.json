@@ -1,0 +1,387 @@
+{
+ "bbox": [
+  -128.6,
+  48.2,
+  -123.3,
+  51.2
+ ],
+ "mainstemByBlueLine": true,
+ "streams": [
+  "Adam River",
+  "Eve River",
+  "Campbell River",
+  "Cayeghle River",
+  "Cayeghle Creek",
+  "Colonial River",
+  "Colonial Creek",
+  "Chemainus River",
+  "Cluxewe River",
+  "Conuma River",
+  "Courtenay River",
+  "Cowichan River",
+  "Goldstream River",
+  "Koksilah River",
+  "Little Qualicum River",
+  "Nahwitti River",
+  "Nanaimo River",
+  "Nitinat River",
+  "Little Nitinat River",
+  "Puntledge River",
+  "Big Qualicum River",
+  "Qualicum River",
+  "Quatse River",
+  "Quinsam River",
+  "Reay Creek",
+  "San Juan River",
+  "Fleet River",
+  "Seymour River",
+  "Shawnigan Creek",
+  "Somass River",
+  "Sproat River",
+  "Stamp River",
+  "Ash River",
+  "Washlawlis River",
+  "Washlawlis Creek",
+  "Waukwaas River",
+  "Waukwaas Creek",
+  "Englishman River",
+  "Oyster River",
+  "Salmon River",
+  "Nimpkish River",
+  "Gold River",
+  "Sooke River",
+  "Sarita River",
+  "Tsolum River",
+  "Marble River",
+  "Keogh River",
+  "Zeballos River",
+  "Tsitika River",
+  "Kokish River",
+  "Browns River"
+ ],
+ "aliases": [],
+ "roads": {
+  "bbox": [
+   -128.6,
+   48.2,
+   -123.3,
+   51.2
+  ],
+  "named": [
+   "Allenby Rd",
+   "Beaver Creek Rd",
+   "Cedar Rd",
+   "Cedar Road",
+   "Comox Lake Rd",
+   "Condensory Rd",
+   "Cowichan Lake Rd",
+   "Duncan Bay Main",
+   "Falls Rd",
+   "Great Central Lake Rd",
+   "Hwy 1",
+   "Hwy 14",
+   "Hwy 18",
+   "Hwy 19",
+   "Hwy 19A",
+   "Hwy 4",
+   "Hwy 4A",
+   "Island Hwy",
+   "Lake Trail Rd",
+   "Maple St",
+   "Mesachie Lake Rd",
+   "Nanaimo Lakes Rd",
+   "Nanaimo Pkwy",
+   "Nanaimo River Rd",
+   "Nitinat Main",
+   "Old Island Hwy",
+   "Pacific Rim Hwy",
+   "Quinsam Rd",
+   "Quinsam River Rd",
+   "River Rd",
+   "Riverbottom Rd",
+   "Service Rd",
+   "Somass Rd",
+   "South Shore Rd",
+   "Spruce St",
+   "Stamp Falls Park Rd",
+   "Trans-Canada Hwy"
+  ]
+ },
+ "bridgeRoads": {
+  "bbox": [
+   -128.6,
+   48.2,
+   -123.3,
+   51.2
+  ],
+  "named": [
+   "Cedar Rd",
+   "Trans-Canada Hwy",
+   "Nanaimo Pkwy",
+   "Island Hwy",
+   "Hwy 19A",
+   "Hwy 19",
+   "Hwy 1",
+   "Hwy 4",
+   "Maple St",
+   "Allenby Rd",
+   "Riverbottom Rd",
+   "Nitinat Main",
+   "Duncan Bay Main",
+   "Cowichan Lake Rd",
+   "Hwy 18",
+   "Hwy 14",
+   "Hwy 4A",
+   "Pacific Rim Hwy",
+   "Beaver Creek Rd",
+   "Comox Lake Rd"
+  ]
+ },
+ "rail": {
+  "bbox": [
+   -128.6,
+   48.2,
+   -123.3,
+   51.2
+  ],
+  "classes": [
+   "Main",
+   "Secondary",
+   "Branch"
+  ]
+ },
+ "secondaryRoads": [
+  "Cedar Rd",
+  "Maple St",
+  "Allenby Rd",
+  "Riverbottom Rd",
+  "Cowichan Lake Rd",
+  "Beaver Creek Rd",
+  "Quinsam Rd",
+  "Duncan Bay Main",
+  "Nitinat Main",
+  "South Shore Rd",
+  "Lake Trail Rd",
+  "Condensory Rd",
+  "Old Island Hwy",
+  "Stamp Falls Park Rd",
+  "Falls Rd",
+  "Nanaimo Lakes Rd",
+  "Nanaimo River Rd",
+  "Somass Rd",
+  "River Rd",
+  "Great Central Lake Rd",
+  "Comox Lake Rd",
+  "Quinsam River Rd",
+  "Spruce St",
+  "Service Rd",
+  "Hwy 4A",
+  "Pacific Rim Hwy",
+  "Cedar Road",
+  "Mesachie Lake Rd"
+ ],
+ "probes": {
+  "crossings": [
+   [
+    "Nanaimo River",
+    "Cedar Rd"
+   ],
+   [
+    "Nanaimo River",
+    "Trans-Canada Hwy"
+   ],
+   [
+    "Nanaimo River",
+    "Nanaimo Pkwy"
+   ],
+   [
+    "Nanaimo River",
+    "Island Hwy"
+   ],
+   [
+    "Nanaimo River",
+    "Hwy 19"
+   ],
+   [
+    "Nanaimo River",
+    "Hwy 1"
+   ],
+   [
+    "Qualicum River",
+    "Hwy 19A"
+   ],
+   [
+    "Big Qualicum River",
+    "Hwy 19A"
+   ],
+   [
+    "Little Qualicum River",
+    "Hwy 19A"
+   ],
+   [
+    "Sproat River",
+    "Hwy 4"
+   ],
+   [
+    "Sproat River",
+    "Pacific Rim Hwy"
+   ],
+   [
+    "Campbell River",
+    "Maple St"
+   ],
+   [
+    "Cowichan River",
+    "Allenby Rd"
+   ],
+   [
+    "Puntledge River",
+    "Duncan Bay Main"
+   ],
+   [
+    "Nitinat River",
+    "Nitinat Main"
+   ],
+   [
+    "Stamp River",
+    "Beaver Creek Rd"
+   ],
+   [
+    "Somass River",
+    "Hwy 4"
+   ],
+   [
+    "Courtenay River",
+    "Hwy 19A"
+   ],
+   [
+    "Courtenay River",
+    "Island Hwy"
+   ]
+  ],
+  "rail": [
+   "Cowichan River",
+   "Qualicum River",
+   "Big Qualicum River",
+   "Nanaimo River",
+   "Little Qualicum River"
+  ],
+  "confluences": [
+   [
+    "Campbell River",
+    "Quinsam River"
+   ],
+   [
+    "Stamp River",
+    "Ash River"
+   ],
+   [
+    "San Juan River",
+    "Fleet River"
+   ],
+   [
+    "Nitinat River",
+    "Little Nitinat River"
+   ],
+   [
+    "Stamp River",
+    "Sproat River"
+   ],
+   [
+    "Somass River",
+    "Sproat River"
+   ],
+   [
+    "Somass River",
+    "Stamp River"
+   ]
+  ],
+  "points": [
+   [
+    "Puntledge River",
+    -125.072,
+    49.705
+   ],
+   [
+    "Little Qualicum River",
+    -124.556,
+    49.302
+   ],
+   [
+    "Little Qualicum River",
+    -124.49,
+    49.345
+   ],
+   [
+    "Stamp River",
+    -124.871,
+    49.327
+   ],
+   [
+    "Stamp River",
+    -124.855,
+    49.295
+   ],
+   [
+    "Cowichan River",
+    -123.745,
+    48.782
+   ],
+   [
+    "Cowichan River",
+    -123.885,
+    48.792
+   ],
+   [
+    "Nanaimo River",
+    -123.99,
+    49.04
+   ],
+   [
+    "Nanaimo River",
+    -124.09,
+    49.02
+   ],
+   [
+    "Nitinat River",
+    -124.66,
+    48.86
+   ],
+   [
+    "Nitinat River",
+    -124.68,
+    48.78
+   ],
+   [
+    "Somass River",
+    -124.81,
+    49.245
+   ],
+   [
+    "Somass River",
+    -124.82,
+    49.255
+   ],
+   [
+    "Campbell River",
+    -125.26,
+    50.035
+   ],
+   [
+    "Sproat River",
+    -124.9,
+    49.29
+   ],
+   [
+    "Qualicum River",
+    -124.615,
+    49.4
+   ],
+   [
+    "Big Qualicum River",
+    -124.615,
+    49.4
+   ]
+  ]
+ }
+}
