@@ -38,7 +38,8 @@ G['lcr'] = [sl('Little Campbell River', 773, 7475)]
 G['lcr-mouth'] = [sl('Little Campbell River', 0, 773)]
 G['mamquam'] = [sl('Mamquam River')]
 G['nicomekl'] = [sl('Nicomekl River', 0, 24232)]
-G['nicomen'] = [sl('Nicomen Slough')]
+G['nicomen'] = [sl('Nicomen Slough', 3355, None)]
+G['nicomen-lower'] = [sl('Nicomen Slough', 0, 3355)]
 G['norrish'] = [sl('Norrish Creek', 0, 12000)]
 G['serpentine'] = [sl('Serpentine River', 0, 17100)]
 G['squamish'] = [sl('Squamish River')]
@@ -71,6 +72,7 @@ mk('Cleveland Dam', 'Capilano River', 6078, 'i')
 mk('Coquitlam Dam', 'Coquitlam River', 18347, 'i')
 mk('Cedar Creek / Hyde Creek confluence', 'De Boville Slough', END('De Boville Slough'), approx=True)
 mk('Siddle (Bell’s) Creek confluence', 'Nicomen Slough', END('Nicomen Slough'), approx=True)
+mk('Hwy 7 bridge (Dewdney)', 'Nicomen Slough', 3355)
 mk('Daisy Lake dam', 'Cheakamus River', 26187, 'i')
 json.dump({'geo': G, 'marks': M}, open(f'{BUILD}/waters.json', 'w'), separators=(',', ':'))
 print('waters.json', os.path.getsize(f'{BUILD}/waters.json'), 'bytes;', len(G), 'waters,', len(M), 'marks')

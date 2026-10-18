@@ -9,7 +9,7 @@ export const NOTICES: Record<string, string> = {
   FN0960: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366086&ID=all',
   FN0961: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=366093&ID=all',
   FN1008: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=367431&ID=all',
-  // Chum opening Oct 17 - Nov 30, 2026 (notice of Oct 15; not yet on the DFO page). Drop or reconcile when the page is updated.
+  // Chum opening Oct 17 - Nov 30, 2026 (notice of Oct 15; on the DFO page since its 2026-10-16 edit).
   FN1122: 'https://notices.dfo-mpo.gc.ca/fns-sap/index-eng.cfm?pg=view_notice&DOC_ID=370681&ID=all',
 };
 export const GLOBAL_RULES: string[] = [
@@ -172,8 +172,14 @@ const LISTED: Water[] = [
       {sp:'chinook',kind:'nr',from:'12-01',to:'12-31'},
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'1 hatchery marked per day'},
     ]},
-  { id:'nicomen', name:'Nicomen (Dewdney) Slough', sub:'Siddle Creek down to the Fraser',
-    area:'From the confluence of Siddle (Bell’s) Creek downstream to the Fraser River.',
+  // DFO lists coho for the whole slough but the FN1122 chum opening only below the Hwy 7 bridge at Dewdney.
+  { id:'nicomen', name:'Nicomen (Dewdney) Slough', sub:'Siddle Creek down to the Hwy 7 bridge at Dewdney',
+    area:'From the confluence of Siddle (Bell’s) Creek downstream to the Highway 7 bridge at Dewdney.',
+    rules:[
+      {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day, only 2 over 35 cm'},
+    ]},
+  { id:'nicomen-lower', name:'Nicomen (Dewdney) Slough', sub:'Hwy 7 bridge at Dewdney down to the Fraser',
+    area:'From the Highway 7 bridge at Dewdney downstream to the Fraser River.',
     rules:[
       {sp:'coho',kind:'keep',from:'09-01',to:'12-31',limit:'4 hatchery marked per day, only 2 over 35 cm'},
       {sp:'chum',kind:'keep',from:'10-17',to:'11-30',limit:'2 per day',notice:'FN1122'},

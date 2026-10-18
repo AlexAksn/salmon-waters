@@ -29,7 +29,7 @@ describe('fetch-notices', () => {
     const body = noticeBody(fn1122);
     expect(body).toMatch(/^Further to FN1119/);
     expect(body).toContain('the Fraser River'); // named as a landmark only: must not become a water below
-    expect(watersInBody(body, P.waters)).toEqual(['chilliwack', 'alouette-upper', 'alouette-lower', 'chehalis', 'harrison-upper', 'harrison-lower', 'nicomen', 'serpentine', 'stave']);
+    expect(watersInBody(body, P.waters)).toEqual(['chilliwack', 'alouette-upper', 'alouette-lower', 'chehalis', 'harrison-upper', 'harrison-lower', 'nicomen', 'nicomen-lower', 'serpentine', 'stave']);
     expect(watersInBody('Prose only. The Fraser River and the Stave River are mentioned.', P.waters)).toEqual([]);
     expect(noticeBody('<html>no body</html>')).toBe('');
   });
