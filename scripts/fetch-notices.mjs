@@ -103,6 +103,15 @@ export async function relevant(rows, P, bodyOf) {
 }
 export const fetchRecent = async (P, fetchImpl = fetch) => relevant(await fetchListing(fetchImpl), P, bodyFetcher(fetchImpl));
 
+/** Pinned "we moved" entry for browsers still running the cached build from alexaksn.github.io: their service worker can
+ * never update (its script URL now redirects), but they still fetch this file through GitHub's redirect. Dated today so
+ * the old app's "New notice" banner and notice list show it; the current app drops it (src/lib/notices.ts realNotices). */
+export const todayPacific = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Vancouver' });
+export const movedNotice = (date = todayPacific()) => ({
+  fn: 'salmonwaters.ca', docId: 'moved', date, sent: `${date} 23:59`, url: 'https://salmonwaters.ca/', region: true, waters: [], moved: true,
+  subject: 'Salmon Waters has moved here; this old address no longer updates.',
+});
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const fetchedAt = new Date().toISOString();
   let rows = null, listError = null;
@@ -110,7 +119,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const bodyOf = bodyFetcher();
   for (const r of regions()) {
     const status = { fetchedAt, ok: false, error: listError, notices: [] };
-    if (rows) { try { status.notices = await relevant(rows, noticePatterns(r), bodyOf); status.ok = true; } catch (e) { status.error = String(e?.message || e); } }
+    if (rows) { try { status.notices = [movedNotice(), ...await relevant(rows, noticePatterns(r), bodyOf)]; status.ok = true; } catch (e) { status.error = String(e?.message || e); } }
     mkdirSync(dataDir(r.id), { recursive: true });
     writeFileSync(new URL('notices.json', dataDir(r.id)), JSON.stringify(status, null, 2));
     console.log(`notices ${r.id}: ${status.ok ? `${status.notices.length} relevant` : `FAILED ${status.error}`}`);

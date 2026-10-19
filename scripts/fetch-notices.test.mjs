@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { classify, noticeBody, parseNotices, parseSent, relevant, shortSubject, watersInBody } from './fetch-notices.mjs';
+import { classify, movedNotice, noticeBody, parseNotices, parseSent, relevant, shortSubject, watersInBody } from './fetch-notices.mjs';
 import { noticePatterns } from './regions.mjs';
 
 const html = readFileSync(new URL('./fixtures/notices-2026-10-13.html', import.meta.url), 'utf8');
@@ -49,5 +49,10 @@ describe('fetch-notices', () => {
     expect(parseSent('October 13, 2026 at 8:39 AM')).toEqual({ date: '2026-10-13', sent: '2026-10-13 08:39' });
     expect(parseSent('January 2, 2026 at 12:05 PM')).toEqual({ date: '2026-01-02', sent: '2026-01-02 12:05' });
     expect(parseSent('nonsense')).toBeNull();
+  });
+  it('pins a region-wide "moved" entry the old github.io build shows as a notice', () => {
+    const m = movedNotice('2026-10-19');
+    expect(m).toMatchObject({ region: true, waters: [], moved: true, date: '2026-10-19', sent: '2026-10-19 23:59', url: 'https://salmonwaters.ca/' });
+    expect(movedNotice().date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

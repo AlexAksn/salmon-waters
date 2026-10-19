@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, isoLocal } from './rules';
-import { freshNotice, type Notice } from './notices';
+import { freshNotice, realNotices, type Notice } from './notices';
+
+describe('realNotices', () => {
+  it('drops the pinned moved entry and keeps the rest', () => {
+    const n = (fn: string, moved?: boolean): Notice => ({ fn, docId: fn, subject: fn, date: '2026-10-19', sent: '', url: '', region: true, waters: [], ...(moved ? { moved } : {}) });
+    expect(realNotices([n('salmonwaters.ca', true), n('FN1')]).map((x) => x.fn)).toEqual(['FN1']);
+  });
+});
 
 describe('freshNotice', () => {
   const today = isoLocal(new Date());

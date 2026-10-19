@@ -1,10 +1,12 @@
 import { addDays, fmtDate, isoLocal, parseIso } from './rules';
 
 /** One DFO fishery notice, as produced by scripts/fetch-notices.mjs. */
-export interface Notice { fn: string; docId: string; subject: string; date: string; sent: string; url: string; region: boolean; waters: string[] }
+export interface Notice { fn: string; docId: string; subject: string; date: string; sent: string; url: string; region: boolean; waters: string[]; moved?: boolean }
 export interface NoticesFile { fetchedAt: string; ok: boolean; notices: Notice[] }
 
 export const NOTICE_DAYS = 30;
+/** Drops the pinned "we moved" entry that scripts/fetch-notices.mjs writes for browsers stuck on the old github.io build. */
+export const realNotices = (ns: Notice[]) => ns.filter((n) => !n.moved);
 /** Notices newer than `days` days (notices are kept sorted newest first). */
 export const recentNotices = (ns: Notice[], days = NOTICE_DAYS) => { const cutoff = isoLocal(addDays(new Date(), -days)); return ns.filter((n) => n.date >= cutoff); };
 /** Newest notice from the last `days` days that is region-wide or names a listed water and is dated after the DFO page

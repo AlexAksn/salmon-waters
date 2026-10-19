@@ -7,7 +7,7 @@ import type { SalmonMap } from './lib/map';
 import { RegionContext } from './lib/region';
 import { addDays, isUnlisted, speciesPicksFor, statusOf, type SpeciesPick, type Status } from './lib/rules';
 import { readUrl, writeUrl, type UrlState } from './lib/urlState';
-import { fmtNoticeDate, freshNotice, recentNotices, type Notice, type NoticesFile } from './lib/notices';
+import { fmtNoticeDate, freshNotice, realNotices, recentNotices, type Notice, type NoticesFile } from './lib/notices';
 import { regionEntry } from './regions';
 import type { RegionData, Water } from './regions/model';
 import Header from './components/Header';
@@ -119,7 +119,7 @@ export default function App() {
     return m;
   }, [data, waters, origin]);
 
-  const notices: Notice[] = useMemo(() => recentNotices(noticeFile?.ok ? noticeFile.notices : []), [noticeFile]);
+  const notices: Notice[] = useMemo(() => recentNotices(realNotices(noticeFile?.ok ? noticeFile.notices : [])), [noticeFile]);
   // Newest notice newer than the transcribed DFO page that touches a listed water or the whole region: the "page not updated yet" case.
   const fresh = useMemo(() => region ? freshNotice(notices, region.dfo.date, (id) => { const w = region.byId.get(id); return !!w && !isUnlisted(w); }) : null, [region, notices]);
 

@@ -9,7 +9,11 @@ export default defineConfig({
   base,
   plugins: [
     react(),
+    // No offline caching: the service worker is kept only as a self-destroying stub (2026-10-19) so browsers that
+    // installed the earlier caching worker on this origin unregister it and drop its caches. The plugin still
+    // writes the web manifest, which is what "Add to Home Screen" needs.
     VitePWA({
+      selfDestroying: true,
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
@@ -25,18 +29,6 @@ export default defineConfig({
           { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
-        ],
-      },
-      workbox: {
-        // App shell is precached. Region data JSON is cached on first use instead (precaching it would download every region's 2 MB base map up front).
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
-        runtimeCaching: [
-          // Status files are small and change between builds: network first, so a new notice shows on the next load rather than the one after.
-          { urlPattern: /\/data\/[^/]+\/(notices|dfo-status)\.json$/, handler: 'NetworkFirst', options: { cacheName: 'status', networkTimeoutSeconds: 5, expiration: { maxEntries: 16 } } },
-          { urlPattern: /\/data\/.+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'data', expiration: { maxEntries: 16 } } },
-          { urlPattern: /^https:\/\/api\.weather\.gc\.ca\//, handler: 'NetworkFirst', options: { cacheName: 'hydrometric', networkTimeoutSeconds: 10, expiration: { maxEntries: 80, maxAgeSeconds: 6 * 3600 } } },
-          { urlPattern: /^https:\/\/(tile\.openstreetmap\.org|[abc]\.tile\.opentopomap\.org|server\.arcgisonline\.com|api\.maptiler\.com)\//, handler: 'CacheFirst', options: { cacheName: 'tiles', expiration: { maxEntries: 800, maxAgeSeconds: 14 * 24 * 3600 }, cacheableResponse: { statuses: [0, 200] } } },
-          { urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//, handler: 'StaleWhileRevalidate', options: { cacheName: 'fonts', expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 3600 } } },
         ],
       },
     }),
