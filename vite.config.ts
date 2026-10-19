@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// GitHub Pages serves project sites under /<repo>/; the workflow passes BASE_PATH accordingly.
+// Served at the root of salmonwaters.ca (public/CNAME). A fork on <you>.github.io/<repo>/ sets BASE_PATH=/<repo>/ in the workflow.
 const base = process.env.BASE_PATH || '/';
 
 export default defineConfig({

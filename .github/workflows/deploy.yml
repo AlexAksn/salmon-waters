@@ -29,8 +29,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build # prebuild = DFO freshness check + notices -> public/data/{dfo-status,notices}.json
-        env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+        # Served at the root of the custom domain (public/CNAME), so no BASE_PATH sub-path.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -3,7 +3,7 @@
 > **Not an official source.** This is a hobby project that re-presents Fisheries and Oceans Canada's published
 > regulations. Rules are transcribed by hand and can be wrong or out of date; boundary points are approximate;
 > river data is provisional. Always confirm with the [DFO page](https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html),
-> current fishery notices and on-site signs before you fish. Live site: https://alexaksn.github.io/salmon-waters/
+> current fishery notices and on-site signs before you fish. Live site: https://salmonwaters.ca/
 
 "Can I fish for salmon here, right now?" — an interactive map of the freshwater salmon openings, closures and
 boundaries published by DFO for Region 2 (Lower Mainland) and Region 1 (Vancouver Island):
@@ -41,8 +41,9 @@ DFO freshness check and notice pull (`prebuild`) stay current. Nothing runs serv
 gh repo create salmon-waters --public --source . --push      # or private; Pages is free either way
 gh api repos/{owner}/salmon-waters/pages -X POST -f build_type=workflow   # Pages source = GitHub Actions
 ```
-The site appears at `https://<you>.github.io/salmon-waters/` after the first run (Actions tab). The workflow sets
-`BASE_PATH` from the repo name, so assets resolve under the sub-path; a custom domain or `<you>.github.io` repo needs no change.
+The site is served at the custom domain in `public/CNAME` (salmonwaters.ca; GitHub redirects the old
+`alexaksn.github.io/salmon-waters/` links there). For a fork without a domain, delete `public/CNAME` and pass
+`BASE_PATH: /<repo>/` to the build step in the workflow so assets resolve under the sub-path.
 
 Any other static host works too (`npm run build` → `dist/`); only the scheduled freshness check is GitHub-specific.
 Optional `.env`: `VITE_MAPTILER_KEY=…` switches Streets/Topo/Satellite to MapTiler (the default public OSM /

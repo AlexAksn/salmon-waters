@@ -10,7 +10,7 @@ const C = { bg: '#0d1317', panel: '#151d22', fg: '#e6ece7', muted: '#9aa8a0', li
 const STATUS_COLOR: Record<Status, string> = { open: C.open, cr: C.cr, closed: C.closed, none: C.none, tidal: C.tidal };
 const W = 1200, H = 630, PAD = 64;
 const DISPLAY = "'Barlow Semi Condensed','Arial Narrow',system-ui,sans-serif", BODY = "'IBM Plex Sans',system-ui,sans-serif", MONO = "'IBM Plex Mono',Menlo,monospace";
-const SITE = 'alexaksn.github.io/salmon-waters';
+const SITE = 'salmonwaters.ca';
 
 export interface ShareInput { w: Water; date: Date; sp: SpeciesPick; status: Status; region: RegionMeta; url: string }
 
