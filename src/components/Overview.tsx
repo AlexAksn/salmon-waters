@@ -124,7 +124,7 @@ export default function Overview({ date, onPick }: Props) {
         </div>
         {cards(BC_REGIONS.filter((r) => !isMapped(r)), 'stubs')}
       </div>
-      <div className="foot">Not an official source: confirm with DFO, fishery notices and on-site signs before you fish. Region outlines: BC wildlife management units (Open Government Licence – BC). · <a href="https://github.com/AlexAksn/salmon-waters" target="_blank" rel="noopener">About / report a problem</a></div>
+      <div className="foot">Not an official source: confirm with DFO, fishery notices and on-site signs before you fish. Region outlines: BC wildlife management units (Open Government Licence – BC). · <a href="https://github.com/AlexAksn/salmon-waters" target="_blank" rel="noopener">About / report a problem</a> · Free and ad-free, made in Vancouver. <a href="https://ko-fi.com/salmonwaters" target="_blank" rel="noopener">Buy me a coffee ☕</a></div>
     </div>
   );
 }

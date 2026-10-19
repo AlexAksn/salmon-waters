@@ -98,6 +98,7 @@ const Panel = forwardRef<HTMLElement, Props>(function Panel(p, ref) {
         Boundary points are placed from the written descriptions; those marked approximate were estimated. River data: Environment and Climate Change Canada (provisional).{p.dfoCheckedAt && <> DFO page last checked {new Date(p.dfoCheckedAt).toLocaleDateString('en-CA')}.</>}</span>
         <button className="more" onClick={() => setFootOpen((o) => !o)} aria-expanded={footOpen}>{footOpen ? 'Less' : 'Sources & disclaimer'}</button>
         {' · '}<a href="https://github.com/AlexAksn/salmon-waters/issues" target="_blank" rel="noopener">Report a problem</a>
+        {' · '}Free and ad-free, made in Vancouver. <a href="https://ko-fi.com/salmonwaters" target="_blank" rel="noopener">Buy me a coffee ☕</a>
       </div>
     </aside>
   );
