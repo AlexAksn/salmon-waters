@@ -21,7 +21,7 @@ https://www.pac.dfo-mpo.gc.ca/fm-gp/rec/fresh-douce/region2-eng.html
 - **Fishery notices**: every build pulls the last ~6 weeks of DFO Pacific notices and keeps the recreational-salmon ones
   for Region 2 / our rivers. They show as a strip, a badge on the affected water, in its detail view, and in the banner
   when newer than two weeks — notices usually land before the regulations page is edited.
-- **Installable PWA**: app shell, rules and the Chart basemap are precached; gauge data and tiles are cached on use.
+- **Installable**: web app manifest for add-to-home-screen; no service worker, nothing is cached offline.
 
 ## Stack
 Vite + React 18 + TypeScript + Leaflet. Static output — no backend.
@@ -58,14 +58,15 @@ src/regions/model.ts        data model every region shares: Rule/Water types, sp
 src/regions/index.ts        region registry (id, name, DFO page, home view, lazy loader); the first entry is the default
 src/regions/r2/regs.ts      Region 2 rules table transcribed from the DFO page — edit this when DFO changes the page
 src/regions/r2/region.json  DFO page url, date and table hash the rules came from (check-dfo compares), notice patterns
-src/regions/r2/gauges.ts    water id -> ECCC station; edit to add/replace gauges
+src/regions/r2/gauges.ts    water id -> ECCC station; edit to add/replace gauges, then `npm run data:stations`
+src/regions/r2/stations.json  generated: station coordinates (-> one bbox request for all cards) + HYDAT monthly means
 src/regions/r2/geo.json     geometry pipeline inputs: bbox, FWA stream names, roads, rail, boundary probes
 src/regions/r2/waters.py    build/r2/stems -> waters.json (centreline slice per stretch + markers; measures by hand)
 src/lib/rules.ts      status engine (date windows incl. wrap-around + "until further notice", season runs, upcoming changes)
 src/lib/region.ts     the loaded region as React context (useRegion) + makeRegion
 src/lib/map.ts        Leaflet controller (per-pane canvases, merged vector base, tile basemaps, status painting, markers)
 src/lib/geo.ts        geometry types + distance helpers
-src/lib/flow.ts       ECCC hydrometric API client (realtime + HYDAT monthly means), trend + "vs typical" logic
+src/lib/flow.ts       ECCC hydrometric API client (one bbox request per region for the cards, per station for the chart), trend + "vs typical" logic
 src/components/       Header, MapView, Panel (list/detail), WaterCard, WaterDetail, SeasonStrip, ChangingSoon
 public/data/r2/base.json    vector basemap: land, lakes, river polygons, highways, secondary roads, rail (~2 MB)
 public/data/r2/waters.json  river centreline slice per regulated stretch + boundary markers (~200 KB)
@@ -78,6 +79,7 @@ scripts/bc-regions.py     wildlife management units -> public/data/bc-regions.js
 src/components/Overview.tsx  BC overview page: region outlines coloured by today's counts; unmapped regions as stubs (src/regions/index.ts)
 scripts/check-dfo.mjs     prebuild: per region, fetch its DFO page -> public/data/<id>/dfo-status.json (date + table hash)
 scripts/fetch-notices.mjs prebuild: DFO notice search pages -> public/data/<id>/notices.json (regex-matched to water ids)
+scripts/stations.mjs      gauges.ts -> src/regions/<id>/stations.json (station coordinates, bbox, HYDAT monthly means); rerun yearly
 ```
 Regenerate geometry: `npm run data:raw -- r2 && npm run data:geo -- r2`. Region outlines for the BC overview page
 (`public/data/bc-regions.json`, dissolved from BC's wildlife management units): `npm run data:regions`.

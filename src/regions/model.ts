@@ -25,6 +25,11 @@ export interface Water {
 export type City = [name: string, lon: number, lat: number, rank: 1 | 2 | 3];
 /** Environment and Climate Change Canada real-time hydrometric station matched to a water. */
 export interface Gauge { stn: string; name: string; note?: string }
+/** From scripts/stations.mjs: where a station is, and HYDAT long-term mean discharge by month (index 0 = January). */
+export interface StationInfo { lon: number; lat: number; typ: (number | null)[]; years: number[] }
+/** src/regions/<id>/stations.json: every gauge's StationInfo and one bbox around them all. */
+export interface StationsJson { fetched: string; bbox: number[]; stations: Record<string, StationInfo> }
+export type BBox = [w: number, s: number, e: number, n: number];
 
 /** src/regions/<id>/region.json. The scripts also read dfo.tableHash and the notice patterns from it. */
 export interface RegionJson { id: string; num: number; name: string; dfo: { url: string; date: string; tableHash: string }; home: number[][]; dayNote: string }
@@ -47,4 +52,7 @@ export interface RegionData extends RegionMeta {
   /** Fishery-notice number -> URL, for rules that cite one. */
   notices: Record<string, string>;
   gauges: Record<string, Gauge>;
+  /** One realtime request for this box feeds every card's flow chip. */
+  bbox: BBox;
+  stations: Record<string, StationInfo>;
 }

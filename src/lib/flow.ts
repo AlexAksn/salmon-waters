@@ -1,5 +1,6 @@
 // River conditions from ECCC's MSC GeoMet OGC API (CORS-enabled, 5-minute readings).
 // https://api.weather.gc.ca/collections/hydrometric-realtime
+import type { BBox, StationInfo } from '../regions/model';
 export interface Reading { t: number; level: number | null; q: number | null }
 export type TrendDir = 'rising' | 'falling' | 'steady';
 export interface Trend { dir: TrendDir; pct6h: number | null; pct24h: number | null }
@@ -8,11 +9,12 @@ export interface Typical { month: number; meanQ: number | null; years: number }
 const API = 'https://api.weather.gc.ca/collections';
 /** Readings are refreshed this often (lib cache TTL and App poll share it). */
 export const FLOW_TTL_MS = 10 * 60_000;
-async function getJson<T>(url: string, tag: string): Promise<T> {
+async function get(url: string, tag: string): Promise<Response> {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${tag} ${r.status}`);
-  return r.json() as Promise<T>;
+  return r;
 }
+const getJson = <T,>(url: string, tag: string): Promise<T> => get(url, tag).then((r) => r.json() as Promise<T>);
 const cache = new Map<string, { at: number; p: Promise<unknown> }>();
 function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
   const hit = cache.get(key);
@@ -22,41 +24,46 @@ function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T>
   return p;
 }
 
+const RT = `${API}/hydrometric-realtime/items`;
+const since = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+const has = (r: Reading) => r.level != null || r.q != null;
 interface RtFeature { properties: { DATETIME: string; LEVEL: number | null; DISCHARGE: number | null } }
+/** One station's readings, for the detail chart. */
 export function fetchHistory(stn: string, hours: number): Promise<Reading[]> {
   return cached(`h:${stn}:${hours}`, FLOW_TTL_MS, async () => {
-    const start = new Date(Date.now() - hours * 3600_000).toISOString().replace(/\.\d{3}Z$/, 'Z');
-    const u = `${API}/hydrometric-realtime/items?STATION_NUMBER=${stn}&datetime=${start}/..&sortby=DATETIME&limit=1000&properties=DATETIME,LEVEL,DISCHARGE&f=json`;
+    const u = `${RT}?STATION_NUMBER=${stn}&datetime=${since(hours)}/..&sortby=DATETIME&limit=1000&properties=DATETIME,LEVEL,DISCHARGE&f=json`;
     const j = await getJson<{ features: RtFeature[] }>(u, 'hydrometric');
-    return j.features.map((f) => ({ t: Date.parse(f.properties.DATETIME), level: f.properties.LEVEL, q: f.properties.DISCHARGE }))
-      .filter((x) => x.level != null || x.q != null);
+    return j.features.map((f) => ({ t: Date.parse(f.properties.DATETIME), level: f.properties.LEVEL, q: f.properties.DISCHARGE })).filter(has);
   });
 }
 
-/** Run at most `n` fetches at a time (polite to the public API). */
-export async function fetchMany(stns: string[], hours: number, n = 4): Promise<Record<string, Reading[]>> {
-  const out: Record<string, Reading[]> = {};
-  const queue = [...new Set(stns)];
-  await Promise.all(Array.from({ length: n }, async () => {
-    for (let s = queue.shift(); s; s = queue.shift()) {
-      try { out[s] = await fetchHistory(s, hours); } catch { /* station offline: leave undefined */ }
+/** The API pages at 10 000 rows; a region's 24 h is one or two pages. CSV is half the bytes of GeoJSON. */
+const PAGE = 10_000, MAX_PAGES = 5;
+/** Readings for every station inside `bbox` keyed by station number: one request per page instead of one per station. */
+export function fetchArea(bbox: BBox, hours: number): Promise<Record<string, Reading[]>> {
+  return cached(`a:${bbox.join(',')}:${hours}`, FLOW_TTL_MS, async () => {
+    const base = `${RT}?bbox=${bbox.join(',')}&datetime=${since(hours)}/..&sortby=DATETIME&limit=${PAGE}&properties=STATION_NUMBER,DATETIME,LEVEL,DISCHARGE&f=csv`;
+    const out: Record<string, Reading[]> = {};
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const rows = parseCsv(await (await get(`${base}&offset=${page * PAGE}`, 'hydrometric')).text());
+      for (const r of rows) if (has(r)) (out[r.stn] ??= []).push(r);
+      if (rows.length < PAGE) break;
     }
-  }));
-  return out;
-}
-
-interface MmFeature { properties: { DATE: string; MONTHLY_MEAN_DISCHARGE: number | null } }
-/** Long-term mean discharge for `month` (1-12) from HYDAT monthly means, most recent 30 years with data. */
-export function fetchTypical(stn: string, month: number): Promise<Typical> {
-  return cached(`t:${stn}:${month}`, 24 * 3600_000, async () => {
-    const u = `${API}/hydrometric-monthly-mean/items?STATION_NUMBER=${stn}&limit=3000&properties=DATE,MONTHLY_MEAN_DISCHARGE&f=json`;
-    const j = await getJson<{ features: MmFeature[] }>(u, 'monthly');
-    const mm = String(month).padStart(2, '0');
-    const vals = j.features.filter((f) => f.properties.DATE.endsWith(`-${mm}`) && f.properties.MONTHLY_MEAN_DISCHARGE != null)
-      .sort((a, b) => b.properties.DATE.localeCompare(a.properties.DATE)).slice(0, 30).map((f) => f.properties.MONTHLY_MEAN_DISCHARGE as number);
-    return { month, meanQ: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null, years: vals.length };
+    for (const rs of Object.values(out)) rs.sort((a, b) => a.t - b.t);
+    return out;
   });
 }
+/** `x,y,STATION_NUMBER,DATETIME,LEVEL,DISCHARGE` with empty cells for missing values. */
+export function parseCsv(text: string): (Reading & { stn: string })[] {
+  const lines = text.trim().split('\n');
+  const col = Object.fromEntries(lines[0].trim().split(',').map((h, i) => [h, i]));
+  const num = (s: string | undefined) => (s === undefined || s === '' ? null : Number(s));
+  return lines.slice(1).map((l) => { const c = l.split(','); return { stn: c[col.STATION_NUMBER], t: Date.parse(c[col.DATETIME]), level: num(c[col.LEVEL]), q: num(c[col.DISCHARGE]) }; });
+}
+
+/** "Typical for this month": HYDAT long-term mean from stations.json (scripts/stations.mjs). */
+export const typical = (s: StationInfo | undefined, month: number): Typical | null =>
+  s && s.typ[month - 1] != null ? { month, meanQ: s.typ[month - 1], years: s.years[month - 1] } : null;
 
 export const metric = (r: Reading) => (r.q != null ? r.q : r.level);
 /** Min/max of the plotted metric over a series (null when nothing is plottable). */

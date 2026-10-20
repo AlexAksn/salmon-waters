@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Basemap } from './lib/basemaps';
-import { fetchMany, FLOW_TTL_MS, type Reading } from './lib/flow';
+import { fetchArea, FLOW_TTL_MS, type Reading } from './lib/flow';
 import type { BaseData, LatLon, WatersGeo } from './lib/geo';
 import { getPosition, km, waterMid } from './lib/geo';
 import type { SalmonMap } from './lib/map';
@@ -91,20 +91,21 @@ export default function App() {
   useEffect(() => { if (region && !picks.some((p) => p.id === sp)) setSp('any'); }, [region, picks, sp]);
   /** Gauges shown on cards: listed waters only (unlisted rivers carry no flow chip). */
   const stations = useMemo(() => region ? [...new Set(waters.filter((w) => !isUnlisted(w)).map((w) => region.gauges[w.id]?.stn).filter((s): s is string => !!s))] : [], [region, waters]);
-  // 24 h of readings for every gauged listed water; refreshed every FLOW_TTL_MS while the tab is visible.
+  // 24 h of readings for the whole region in one request, kept to the gauged listed waters; refreshed every FLOW_TTL_MS while the tab is visible.
   useEffect(() => {
-    if (!stations.length) return;
+    if (!region || !stations.length) return;
+    const { bbox } = region;
     let live = true, last = 0;
     const load = () => {
       if (document.hidden || Date.now() - last < FLOW_TTL_MS) return;
       last = Date.now();
-      fetchMany(stations, 24).then((r) => { if (live) setFlows(r); });
+      fetchArea(bbox, 24).then((r) => { if (live) setFlows(Object.fromEntries(stations.filter((s) => r[s]).map((s) => [s, r[s]]))); }, () => { /* API down: chips stay as they were */ });
     };
     load();
     const id = setInterval(load, 60_000);
     document.addEventListener('visibilitychange', load);
     return () => { live = false; clearInterval(id); document.removeEventListener('visibilitychange', load); };
-  }, [stations]);
+  }, [region, stations]);
 
   const status = useMemo(() => Object.fromEntries(waters.map((w) => [w.id, statusOf(w, date, sp)])) as Record<string, Status>, [waters, date, sp]);
   const origin: LatLon | null = useMemo(() => {

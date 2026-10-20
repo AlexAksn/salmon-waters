@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Gauge } from '../regions/model';
-import { ageMinutes, fetchHistory, fetchTypical, fmtMetric, fmtQ, fmtReading, hasFlow, latest, metric, metricRange, trend, TREND_ARROW, vsTypical, wateroffice, type Reading, type Typical } from '../lib/flow';
+import { ageMinutes, fetchHistory, fmtMetric, fmtQ, fmtReading, hasFlow, latest, metric, metricRange, trend, TREND_ARROW, typical, vsTypical, wateroffice, type Reading } from '../lib/flow';
+import { useRegion } from '../lib/region';
 import { fmtDate, MON } from '../lib/rules';
 
 const HOURS = 72;
@@ -8,19 +9,19 @@ const W = 360, H = 150, PL = 8, PR = 10, PT = 12, PB = 20;
 
 /** River conditions for the detail view: current reading, trend, 72 h chart, and "normal for this month". */
 export default function FlowPanel({ gauge }: { gauge: Gauge }) {
+  const region = useRegion();
   const [rs, setRs] = useState<Reading[] | null>(null);
-  const [typ, setTyp] = useState<Typical | null>(null);
   const [err, setErr] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const month = new Date().getMonth() + 1;
+  const typ = typical(region.stations[gauge.stn], month);
 
   useEffect(() => {
-    let live = true; setRs(null); setTyp(null); setErr(false);
+    let live = true; setRs(null); setErr(false);
     fetchHistory(gauge.stn, HOURS).then((r) => { if (live) setRs(r); }).catch(() => { if (live) setErr(true); });
-    fetchTypical(gauge.stn, month).then((t) => { if (live) setTyp(t); }).catch(() => { /* optional context */ });
     return () => { live = false; };
-  }, [gauge.stn, month]);
+  }, [gauge.stn]);
 
   const now = rs ? latest(rs) : null;
   const tr = rs ? trend(rs) : null;

@@ -14,7 +14,8 @@
     "data:regions": "scripts/fetch_bc_regions.sh",
     "prebuild": "node scripts/check-dfo.mjs && node scripts/fetch-notices.mjs",
     "check:dfo": "node scripts/check-dfo.mjs",
-    "check:notices": "node scripts/fetch-notices.mjs"
+    "check:notices": "node scripts/fetch-notices.mjs",
+    "data:stations": "node scripts/stations.mjs r1 r2"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
